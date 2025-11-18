@@ -9,6 +9,12 @@ module.exports = {
         console.log("Watching server status embeds to update every " + seconds + " seconds...");
 
         const updateEmbeds = async () => {
+            let dataDir = "./ptero/data";
+            if (!fs.existsSync(dataDir)){
+                console.log("Data directory not found, creating...");
+                fs.mkdirSync(dataDir, { recursive: true });
+            }
+
             let statusMessages = [];
             try {
                 statusMessages = JSON.parse(fs.readFileSync("./ptero/data/statusMessages.json"));
