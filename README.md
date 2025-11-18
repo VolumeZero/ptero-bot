@@ -79,19 +79,19 @@ Supports:
 
 ## ⚙️ Configuration
 
-- Rename config-example.json to config.json and fill in all the required fields
+- Rename config.example.json to config.json and fill in all the required fields
 
 - Setup a Discord bot and get the bot token from the Discord Developer Portal: https://discord.com/developers/applications
 - Fill in the required fields in config.example.json:
   - token: Your Discord bot token
   - owner: Your Discord user ID
   - client_id: Your Discord bot's client ID
-  - test_guild_id: (Optional) Your Discord server ID for testing slash commands
+  - test_guild_id: Your Discord server ID for testing slash commands
   - pterodactyl:
     - company: Your Pterodactyl panel's company name
     - domain: Your Pterodactyl panel URL (e.g., https://panel.example.com)
-    - apiKey: (Optional) Application API key for global actions
-    - cl_apiKey: Your Pterodactyl panel API key for user-specific actions
+    - apiKey: Application API key for global actions
+    - cl_apiKey: A user API key with admin privileges for fetching server usages for status embeds
     - API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
 
 - ▶️ Invite the Bot to Your Server
@@ -107,7 +107,9 @@ Supports:
 
 - panelUrl must end with no trailing slash
 
-- guildId is only required for local development slash-command registration but is also reccommended for single-server bots to speed up command registration.
+- guildId is only required for local development slash-command registration but is also recommended for single-server bots to speed up command registration.
+
+- cl_apiKey is required and used ONLY for getting server usages when updating status embeds since the application api does not have an endpoint for server this. This user associated with this key must be an admin user to ensure all server usages can be fetched.
 
 ## 📚 Documentation
 
