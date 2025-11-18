@@ -58,7 +58,7 @@ async function sendServerStatusEmbed(interaction, serverId, iconUrl) {
 
     //send to the current channel and save the message ID for future updates
     const message = await interaction.channel.send({ embeds: [embed] });
-    statusMessages.push({ serverId: serverId, messageId: message.id, channelId: interaction.channel.id, iconUrl: iconUrl });
+    statusMessages.push({ serverId: serverId, messageId: message.id, channelId: interaction.channel.id, iconUrl: iconUrl, userId: interaction.user.id }); //save the user id so we can use their api key later to update the embed
     //save statusMessages array to json file
     fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
     interaction.followUp({ content: `Status embed sent for server **${serverDetails.name}**. It will update every ${SERVER_STATUS_UPDATE_INTERVAL} seconds.`, ephemeral: true });
