@@ -5,7 +5,7 @@
 
 🏠 Introduction
 
-Ptero-Bot is a powerful, lightweight Node.js Discord bot built for Pterodactyl panel users.
+Ptero-Bot is a powerful, and simple Node.js Discord bot built for Pterodactyl panel users.
 
 Using the Nodeactyl API, Ptero-Bot allows server owners and users to manage their Pterodactyl servers directly from Discord.
 
@@ -69,12 +69,7 @@ Supports:
 
 - Global API key in config for non-user-specific actions (application api)
 - User-specific API keys for personalized server management per user (client api)
-- Automatic prompting when missing
-
-
-## 🔧 Installation
-
-- ``` npm install ```
+- Synced user permissions with Pterodactyl panel
 
 
 ## ⚙️ Configuration
@@ -83,24 +78,34 @@ Supports:
 
 - Setup a Discord bot and get the bot token from the Discord Developer Portal: https://discord.com/developers/applications
 - Fill in the required fields in config.example.json:
-  - token: Your Discord bot token
-  - owner: Your Discord user ID
-  - client_id: Your Discord bot's client ID
-  - test_guild_id: Your Discord server ID for testing slash commands
-  - pterodactyl:
-    - company: Your Pterodactyl panel's company name
-    - domain: Your Pterodactyl panel URL (e.g., https://panel.example.com)
-    - apiKey: Application API key for global actions
-    - cl_apiKey: A user API key with admin privileges for fetching server usages for status embeds
-    - API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
+  ```
+  token: Your Discord bot token
+  owner: Your Discord user ID
+  client_id: Your Discord bot's client ID
+  test_guild_id: Your Discord server ID for testing slash commands
+  pterodactyl:
+     company: Your Pterodactyl panel's company name
+     domain: Your Pterodactyl panel URL (e.g., https://panel.example.com)
+     apiKey: Application API key for global actions
+     cl_apiKey: A user API key with admin privileges for fetching server usages for status embeds
+     API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
+  ```
 
 - ▶️ Invite the Bot to Your Server
-  - Once the bot is invited to your server, use the ```/pt key``` command to link your Pterodactyl API key to your Discord user account. From there, you can manage your own servers using the bot with ```/pt manage```.
+  - Use this URL, replacing CLIENT_ID with your bot's client ID:
+  - ``` https://discord.com/oauth2/authorize?client_id=CLIENT_ID&scope=bot%20applications.commands&permissions=8 ```
   
+- 🔧 Installation
+  - ```npm install```
 
 - ▶️ Run the Bot
-
   - ```npm start```
+
+- 🔗 Link Api Key
+  - Use the ```/pt key``` command to link your Pterodactyl API key to your Discord user account.
+
+- ⚙️ Manage Your Servers
+  - Use the ```/pt manage``` command to open the server manager for one of your linked servers!
 
 
 ## 📋 Config Notes
@@ -109,7 +114,7 @@ Supports:
 
 - guildId is only required for local development slash-command registration but is also recommended for single-server bots to speed up command registration.
 
-- cl_apiKey is required and used ONLY for getting server usages when updating status embeds since the application api does not have an endpoint for server this. This user associated with this key must be an admin user to ensure all server usages can be fetched.
+- cl_apiKey is required and used ONLY for getting server usages when updating status embeds since the application api does not have an endpoint for this. The user associated with this key must be an admin user to ensure all server usages can be fetched (unless you manually add the user to each server).
 
 ## 📚 Documentation
 
