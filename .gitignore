@@ -111,3 +111,6 @@ dist
 
 apiKeys.json
 apiKeys.txt
+ptero/data/statusMessages.json
+ptero/data/nodeStatusMessages.json
+ptero/data/statusMessages.json
