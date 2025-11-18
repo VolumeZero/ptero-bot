@@ -1,7 +1,7 @@
 <h1 align="center">Welcome to Ptero-Bot 👋</h1>
 <p align="center"> <img alt="Version" src="https://img.shields.io/badge/version-v1.0-blue.svg" /> <img alt="Documentation" src="https://img.shields.io/badge/documentation-WIP-brightgreen.svg" /> <img alt="Maintenance" src="https://img.shields.io/badge/maintained-yes-green.svg" /> </p>
 
-A Discord bot built for managing, monitoring, and interacting with Pterodactyl servers — all directly from Discord.
+## A Discord bot built for managing, monitoring, and interacting with Pterodactyl servers — all directly from Discord.
 
 🏠 Introduction
 
@@ -13,117 +13,118 @@ It provides real-time server monitoring, detailed embeds, and an interactive ser
 Even if you are not the owner of the Pterodactyl panel, you can still use user-specific API keys to manage your own servers through the bot. (Status embeds will not work without an application API key. Server status will eventually be supported)
 
 
-✨ Core Features
-• Interactive Server Manager
+## ✨ Core Features
+### • Interactive Server Manager
 
-The bot includes a complete server management interface using Discord buttons:
+The bot includes a basic server management interface using Discord buttons and embeds:
 
-Start / Stop / Restart server
-
-View live console logs
-
-View live resource usage (CPU, RAM, Disk)
-
-View server details (IP, allocations, node, location, etc.)
-
-View SFTP details (username, password, port)
-
-WebSocket-powered updates to avoid any rate limits
-
-Disable old sessions automatically when user starts a new one or after 60 seconds of inactivity
+- Start / Stop / Restart server
+- View live console logs
+- View live resource usage (CPU, RAM, Disk)
+- View server details (IP, allocations, node, location, etc.)
+- View SFTP details (username, password, port)
+- WebSocket-powered updates to avoid any rate limits
+- Disable old sessions automatically when user starts a new one or after 60 seconds of inactivity
 
 ![Main Server Manager](.images/server-manager.png)
 
 
 
-• Server Status Embeds
+### • Server Status Embeds
 
-Compact and detailed server info
+- Compact and detailed server info
+- Power state icons
+- CPU, RAM, storage, and uptime
+- Api powered updates
 
-Power state icons
-
-CPU, RAM, storage, and uptime
-
-Api powered updates
 
 ![Server Status Embed](.images/status-embed.png)
 
 
-• Node Status Embeds
+### • Node Status Embeds
 
-Resource usage
-
-Allocation data
-
-Node name, location, networking
+- Resource usage (CPU, RAM, Disk)
+- Allocation data
+- Node name, location, and FQDN
+- Api powered updates
 
 ![Server Status Embed](.images/node-embed.png)
 
 
-Extra Features ✅
+## ✅ Extras
 
-• Autocomplete, Modals & Interaction-Ready
+### • Autocomplete, Modals & Interaction-Ready
 
 Full support for:
 
-Slash commands
-
-Autocomplete (server listings, IDs, etc.)
-
-Button interactions
+- Slash commands
+- Autocomplete (server listings, IDs, etc.)
+- Button interactions
 
 
-• Flexible API Key System
+### • Flexible API Key System
 
 Supports:
 
-Global API key in config for non-user-specific actions (application api)
-
-User-specific API keys for personalized server management per user (client api)
-
-Automatic prompting when missing
+- Global API key in config for non-user-specific actions (application api)
+- User-specific API keys for personalized server management per user (client api)
+- Automatic prompting when missing
 
 
-🔧 Installation
-npm install/yarn install
+## 🔧 Installation
+
+- ``` npm install ```
 
 
-⚙️ Configuration
+## ⚙️ Configuration
 
-Rename config-example.json to config.json and fill in all the required fields
+- Rename config-example.json to config.json and fill in all the required fields
 
-Setup a Discord bot and get the bot token from the Discord Developer Portal: https://discord.com/developers/applications
-Fill in the required fields in config
+- Setup a Discord bot and get the bot token from the Discord Developer Portal: https://discord.com/developers/applications
+- Fill in the required fields in config.example.json:
+  - token: Your Discord bot token
+  - owner: Your Discord user ID
+  - client_id: Your Discord bot's client ID
+  - test_guild_id: (Optional) Your Discord server ID for testing slash commands
+  - pterodactyl:
+    - company: Your Pterodactyl panel's company name
+    - domain: Your Pterodactyl panel URL (e.g., https://panel.example.com)
+    - apiKey: (Optional) Application API key for global actions
+    - cl_apiKey: Your Pterodactyl panel API key for user-specific actions
+    - API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
 
-▶️ Run the Bot
+- ▶️ Invite the Bot to Your Server
+  - Once the bot is invited to your server, use the ```/pt key``` command to link your Pterodactyl API key to your Discord user account. From there, you can manage your own servers using the bot with ```/pt manage```.
+  
 
-npm start
+- ▶️ Run the Bot
 
-Once the bot is invited to your server, use the '/pt key' command to link your Pterodactyl API key to your Discord user account. From there, you can manage your own servers using the bot with '/pt manage'.
+  - ```npm start```
 
-📋 Config Notes
 
-panelUrl must end with no trailing slash
+## 📋 Config Notes
 
-guildId is only required for local development slash-command registration
+- panelUrl must end with no trailing slash
 
-📚 Documentation
+- guildId is only required for local development slash-command registration but is also reccommended for single-server bots to speed up command registration.
 
-Offical documentation is not yet available. Please refer to the source code and this readme for guidance.
+## 📚 Documentation
 
-👤 Author
+- Offical documentation is not yet available. Please refer to the source code and this readme for guidance.
 
-VolumeZero
+## 👤 Author
 
-🤝 Contributing
+- VolumeZero
 
-PRs and suggestions are welcome!
-Issues can be opened any time.
+## 🤝 Contributing
 
-⭐ Show Your Support
+- PRs and suggestions are welcome!
+- Issues can be opened any time.
 
-If this bot helped you, consider starring the repo!
+## ⭐ Show Your Support
 
-📝 License
+- If this bot helped you or you like it, please give it a star!
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 📝 License
+
+- This project is licensed under the MIT License - see the LICENSE file for details.
