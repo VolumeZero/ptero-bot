@@ -22,7 +22,7 @@ The bot includes a basic server management interface using Discord buttons and e
 - Start / Stop / Restart server
 - View live console logs
 - View live resource usage (CPU, RAM, Disk)
-- View server details (IP, allocations, node, location, etc.)
+- View server details (ID, Name, Status, Address, Uptime)
 - View SFTP details (username, password, port)
 - WebSocket-powered updates to avoid any rate limits
 - Disable old sessions automatically when user starts a new one or after 60 seconds of inactivity
@@ -36,7 +36,7 @@ The bot includes a basic server management interface using Discord buttons and e
 ### • Server Status Embeds
 
 - Compact and detailed server info
-- Power state icons
+- Power state icon and embed color
 - CPU, RAM, storage, and uptime
 - Api powered updates
 - Only bot owners may create server status embeds to avoid spam
@@ -48,8 +48,10 @@ The bot includes a basic server management interface using Discord buttons and e
 ### • Node Status Embeds
 
 - Resource usage (CPU, RAM, Disk)
-- Allocation data
-- Node name, location, and FQDN
+- Power state icon and embed color
+- Node name, location, allocations and FQDN
+- Total servers hosted on the node
+- Wings version
 - Api powered updates
 - Only bot owners may create node status embeds to avoid spam
 
