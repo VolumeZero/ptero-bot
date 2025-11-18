@@ -73,14 +73,15 @@ module.exports = {
     async execute(interaction) {
 		const subcommand = interaction.options.getSubcommand();
 		const clientApiKey = await loadApiKey(interaction.user.id);
-		if (!clientApiKey) {
-    		return interaction.reply({
-    			content: "You have not set your API key yet. Please use `/pt key` to set it.",
-    			ephemeral: true,
-    		});
-    	}
-
+		
         if (subcommand === "list") {
+            if (!clientApiKey) {
+    	    	return interaction.reply({
+    	    		content: "You have not set your API key yet. Please use `/pt key` to set it.",
+    	    		ephemeral: true,
+    	    	});
+    	    }
+
 			try {
 				await listServers(interaction, clientApiKey);
 			} catch (error) {
@@ -90,6 +91,7 @@ module.exports = {
 					ephemeral: true,
 				});
 			}
+
         } else if (subcommand === "key") {
             const apiKey = interaction.options.getString("api_key");
             await saveApiKey(interaction.user.id, apiKey);
@@ -97,8 +99,16 @@ module.exports = {
                 content: "Your API key has been saved!",
                 ephemeral: true,
             });
+
         } else if (subcommand === "manage") {
             const serverId = interaction.options.getString("server_name");
+            if (!clientApiKey) {
+    	    	return interaction.reply({
+    	    		content: "You have not set your API key yet. Please use `/pt key` to set it.",
+    	    		ephemeral: true,
+    	    	});
+    	    }
+
             try {
                 await serverManageEmbed(interaction, serverId);
             } catch (error) {
@@ -108,8 +118,16 @@ module.exports = {
                     ephemeral: true,
                 });
             }
+
         } else if (subcommand === "server-embed") {
             const serverId = interaction.options.getString("server_name");
+            if (!clientApiKey) {
+    	    	return interaction.reply({
+    	    		content: "You have not set your API key yet. Please use `/pt key` to set it.",
+    	    		ephemeral: true,
+    	    	});
+    	    }
+
             if (!interaction.user.id === require("../../../config.json").owner) {
                 return interaction.reply({
                     content: "Only the bot owner can use this command.",
@@ -127,14 +145,24 @@ module.exports = {
                     ephemeral: true,
                 });
             }
+            
         } else if (subcommand === "node-embed") {
+
             const nodeId = interaction.options.getString("node_name");
+            if (!clientApiKey) {
+    	        return interaction.reply({
+    	        	content: "You have not set your API key yet. Please use `/pt key` to set it.",
+    	        	ephemeral: true,
+    	        });
+    	    }
+
             if (!interaction.user.id === require("../../../config.json").owner) {
                 return interaction.reply({
                     content: "Only the bot owner can use this command.",
                     ephemeral: true,
                 });
             }
+
             try {
                 await sendNodeStatusEmbed(interaction, nodeId); //will be bot owner only and use application api
             } catch (error) {
@@ -143,7 +171,8 @@ module.exports = {
                     content: "An unexpected error occurred while trying to send the node embed.",
                     ephemeral: true,
                 });
-            }   
+            }
+
         } else {
             return interaction.reply({
                 content: "Unknown subcommand.",
