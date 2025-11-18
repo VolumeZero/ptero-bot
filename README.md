@@ -6,6 +6,7 @@
 🏠 Introduction
 
 Ptero-Bot is a powerful, lightweight Node.js Discord bot built for Pterodactyl panel users.
+
 Using the Nodeactyl API, Ptero-Bot allows server owners and users to manage their Pterodactyl servers directly from Discord.
 
 It provides real-time server monitoring, detailed embeds, and an interactive server manager UI inside Discord.
