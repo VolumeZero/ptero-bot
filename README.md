@@ -11,7 +11,7 @@ Using the Nodeactyl API, Ptero-Bot allows server owners and users to manage thei
 
 It provides real-time server monitoring, detailed embeds, and an interactive server manager UI inside Discord.
 
-Even if you are not the owner of the Pterodactyl panel, you can still use user-specific API keys to manage your own servers through the bot. (Status embeds will not work without an application API key. Server status will eventually be supported)
+Even if you are not the owner of the Pterodactyl panel, you can still use user-specific API keys to manage your own servers through the bot. (Node status embeds will not work without an application API key. Server status will work fine)
 
 
 ## ✨ Core Features
@@ -26,6 +26,8 @@ The bot includes a basic server management interface using Discord buttons and e
 - View SFTP details (username, password, port)
 - WebSocket-powered updates to avoid any rate limits
 - Disable old sessions automatically when user starts a new one or after 60 seconds of inactivity
+- Only one active session per user
+- Any user with a linked API key can manage their own servers
 
 ![Main Server Manager](.images/server-manager.png)
 
@@ -37,6 +39,7 @@ The bot includes a basic server management interface using Discord buttons and e
 - Power state icons
 - CPU, RAM, storage, and uptime
 - Api powered updates
+- Only bot owners may create server status embeds to avoid spam
 
 
 ![Server Status Embed](.images/status-embed.png)
@@ -48,6 +51,7 @@ The bot includes a basic server management interface using Discord buttons and e
 - Allocation data
 - Node name, location, and FQDN
 - Api powered updates
+- Only bot owners may create node status embeds to avoid spam
 
 ![Server Status Embed](.images/node-embed.png)
 
