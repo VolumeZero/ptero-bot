@@ -1,4 +1,3 @@
-const { pterodactyl } = require("../../config.json");
 const fs = require("fs");
 const { loadApiKey } = require("../keys");
 const { getErrorMessage } = require("./clientErrors");

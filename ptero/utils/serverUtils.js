@@ -3,11 +3,11 @@ const { default: axios } = require("axios");
 // Helper functions
 function serverPowerEmoji(status) {
     switch (status) {
-        case "running": return "🟢 Online";
-        case "offline": return "🔴 Offline";
-        case "starting": return "🟡 Starting";
-        case "stopping": return "🟠 Stopping";
-        default: return "⚪ Unknown";
+        case "running": return "🟢";
+        case "offline": return "🔴";
+        case "starting": return "🟡";
+        case "stopping": return "🟠";
+        default: return "⚪";
     }
 }
 

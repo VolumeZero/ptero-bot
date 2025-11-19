@@ -5,7 +5,6 @@ const { loadApiKey } = require("../keys");
 const fs = require("fs");
 const { createServerStatusEmbed } = require("../utils/embeds");
 
-
 async function sendServerStatusEmbed(interaction, serverId, iconUrl) {
     //defer reply
     await interaction.deferReply({ ephemeral: true });
