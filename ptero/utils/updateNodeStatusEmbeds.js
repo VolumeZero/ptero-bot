@@ -1,6 +1,6 @@
 const fs = require("fs");
 const {createNodeStatusEmbed} = require("../utils/embeds");
-const { getErrorMessage } = require("../clientErrors");
+const { getErrorMessage } = require("../utils/clientErrors");
 
 module.exports = {
     updateNodeStatusEmbeds: async function (client, seconds) {

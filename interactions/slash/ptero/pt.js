@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { listServers } = require("../../../ptero/listServers");
+const { listServers } = require("../../../ptero/commands/listServers");
 const { saveApiKey, loadApiKey } = require("../../../ptero/keys");
-const { serverManageEmbed } = require("../../../ptero/serverManageEmbed");
-const { sendServerStatusEmbed } = require("../../../ptero/serverStatusEmbed");
-const { sendNodeStatusEmbed } = require("../../../ptero/nodeStatusEmbed");
+const { serverManageEmbed } = require("../../../ptero/commands/serverManageEmbed");
+const { sendServerStatusEmbed } = require("../../../ptero/commands/serverStatusEmbed");
+const { sendNodeStatusEmbed } = require("../../../ptero/commands/nodeStatusEmbed");
 const { pterodactyl } = require("../../../config.json");
 
 module.exports = {

@@ -2,7 +2,6 @@ const Nodeactyl = require("nodeactyl");
 const { EmbedBuilder } = require("discord.js");
 const { pterodactyl, NODE_STATUS_UPDATE_INTERVAL, owner, SERVER_STATUS_UPDATE_INTERVAL } = require("../../config.json");
 const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, checkWings, embedColorFromWingsStatus } = require("./serverUtils");
-const { loadApiKey } = require("../keys");
 
 module.exports = {
     async createNodeStatusEmbed(nodeId) {

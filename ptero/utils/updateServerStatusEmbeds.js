@@ -1,7 +1,7 @@
 const { pterodactyl } = require("../../config.json");
 const fs = require("fs");
 const { loadApiKey } = require("../keys");
-const { getErrorMessage } = require("../clientErrors");
+const { getErrorMessage } = require("./clientErrors");
 const { createServerStatusEmbed } = require('./embeds');
 
 module.exports = {

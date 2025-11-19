@@ -1,9 +1,9 @@
 
 const Nodeactyl = require("nodeactyl");
-const { pterodactyl, SERVER_STATUS_UPDATE_INTERVAL } = require("../config.json");
-const { loadApiKey } = require("./keys");
+const { pterodactyl, SERVER_STATUS_UPDATE_INTERVAL } = require("../../config.json");
+const { loadApiKey } = require("../keys");
 const fs = require("fs");
-const { createServerStatusEmbed } = require("./utils/embeds");
+const { createServerStatusEmbed } = require("../utils/embeds");
 
 
 async function sendServerStatusEmbed(interaction, serverId, iconUrl) {

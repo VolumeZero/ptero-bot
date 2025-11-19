@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { pterodactyl } = require("../config.json");
+const { pterodactyl } = require("../../config.json");
 
 async function pteroAppReq(apiEndpoint, params) {
     try {

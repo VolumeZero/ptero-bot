@@ -1,10 +1,10 @@
 const Nodeactyl = require("nodeactyl");
 const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require("discord.js");
-const { pterodactyl } = require("../config.json");
-const { loadApiKey } = require("./keys");
+const { pterodactyl } = require("../../config.json");
+const { loadApiKey } = require("../keys");
 const { WebSocket } = require("ws");
-const { getErrorMessage } = require("./clientErrors");
-const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, stripAnsi } = require("./utils/serverUtils");
+const { getErrorMessage } = require("../utils/clientErrors");
+const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, stripAnsi } = require("../utils/serverUtils");
 
 
 const activeSessions = new Map(); // userId_serverId -> embed data

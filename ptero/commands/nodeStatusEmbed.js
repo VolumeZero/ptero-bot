@@ -1,8 +1,7 @@
 const Nodeactyl = require("nodeactyl");
-const { pterodactyl, NODE_STATUS_UPDATE_INTERVAL } = require("../config.json");
+const { pterodactyl, NODE_STATUS_UPDATE_INTERVAL } = require("../../config.json");
 const fs = require("fs");
-const { createNodeStatusEmbed } = require("./utils/embeds");
-const { error } = require("console");
+const { createNodeStatusEmbed } = require("../utils/embeds");
 
 module.exports = {
     async sendNodeStatusEmbed(interaction, nodeId) {

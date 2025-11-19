@@ -2,7 +2,7 @@
     
     
 const { EmbedBuilder } = require('discord.js');
-const { pterodactyl } = require("../config.json");
+const { pterodactyl } = require("../../config.json");
 const  Nodeactyl  = require('nodeactyl');
 
 
