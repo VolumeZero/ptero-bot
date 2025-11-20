@@ -64,7 +64,7 @@ module.exports = {
                 { name: "Total Servers", value: `\`\`\`${servers.length}\`\`\``, inline: true },
                 { name: "Wings Version", value: `\`\`\`${wingsInfo ? wingsInfo.version : 'N/A'}\`\`\``, inline: true },
             )
-            .setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:T>\nNext update at <t:${Math.floor(Date.now() / 1000) + NODE_STATUS_UPDATE_INTERVAL}:T>`)
+            .setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>\nNext update in <t:${Math.floor(Date.now() / 1000) + NODE_STATUS_UPDATE_INTERVAL}:R>`)
             .setTimestamp()
             .setFooter({ text: 'Powered by Pterodactyl', iconURL: 'https://p7.hiclipart.com/preview/978/71/779/pterodactyls-pteranodon-minecraft-pterosaurs-computer-servers-minecraft.jpg' });
 
@@ -85,7 +85,7 @@ module.exports = {
             .setAuthor({ name: `Status: ${serverPowerEmoji(serverPowerState)} ${serverPowerState.charAt(0).toUpperCase() + serverPowerState.slice(1)}` })
             .setTitle(`${serverDetails.name}`)
             .setColor(embedColorFromStatus(serverPowerState))
-            .setDescription(`Last updated at <t:${Math.floor(Date.now() / 1000)}:T>`)
+            .setDescription(`Last updated <t:${Math.floor(Date.now() / 1000)}:R>`)
             .addFields(
                 { name: "Address", value: `\`\`\`${ip}:${port}\`\`\``, inline: false },
                 { name: "CPU Usage", value: `\`\`\`${serverResourceUsage.resources.cpu_absolute.toFixed(2)}% / ${serverDetails.limits.cpu}%\`\`\``, inline: true },
