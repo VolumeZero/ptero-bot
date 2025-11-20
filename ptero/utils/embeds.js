@@ -2,7 +2,7 @@ const Nodeactyl = require("nodeactyl");
 const { EmbedBuilder } = require("discord.js");
 const { pterodactyl, NODE_STATUS_UPDATE_INTERVAL } = require("../../config.json");
 const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, checkWings, embedColorFromWingsStatus } = require("./serverUtils");
-const mcs = require('node-mcstatus');
+const { getServerExtras } = require("./getServerExtras");
 
 module.exports = {
     async createNodeStatusEmbed(nodeId) {
@@ -77,26 +77,9 @@ module.exports = {
         const serverResourceUsage = await pteroClient.getServerUsages(serverId);
         const serverPowerState = await pteroClient.getServerStatus(serverId);
         const defaultAllocation = serverDetails.relationships.allocations.data.find(alloc => alloc.attributes.is_default);
-        let minecraftPlayers = null;
-        let maxPlayers = null;
-        let minecraftVersion = null;
-        if (defaultAllocation) {
-            //check if server is a minecraft server by checking if the server name or description contains "minecraft"
-            const res = await mcs.statusJava(defaultAllocation.attributes.ip_alias, defaultAllocation.attributes.port);
-            if (res && res.players) {
-                minecraftPlayers = res.players.online;
-                maxPlayers = res.players.max;
-                minecraftVersion = res.version.name_clean;
-            } else {
-                //try bedrock
-                const resBedrock = await mcs.statusBedrock(defaultAllocation.attributes.ip_alias, defaultAllocation.attributes.port);
-                if (resBedrock && resBedrock.players) {
-                    minecraftPlayers = resBedrock.players.online;
-                    maxPlayers = resBedrock.players.max;
-                    minecraftVersion = resBedrock.version.name_clean;
-                }
-            }
-        }
+        const ip = defaultAllocation.attributes.ip_alias || defaultAllocation.attributes.ip;
+        const port = defaultAllocation.attributes.port;
+        const extras = await getServerExtras(ip, port);
 
         const embed = new EmbedBuilder()
             .setAuthor({ name: `Status: ${serverPowerEmoji(serverPowerState)} ${serverPowerState.charAt(0).toUpperCase() + serverPowerState.slice(1)}` })
@@ -104,7 +87,7 @@ module.exports = {
             .setColor(embedColorFromStatus(serverPowerState))
             .setDescription(`Last updated at <t:${Math.floor(Date.now() / 1000)}:T>`)
             .addFields(
-                { name: "Address", value: `\`\`\`${defaultAllocation.attributes.ip_alias}:${defaultAllocation.attributes.port}\`\`\``, inline: false },
+                { name: "Address", value: `\`\`\`${ip}:${port}\`\`\``, inline: false },
                 { name: "CPU Usage", value: `\`\`\`${serverResourceUsage.resources.cpu_absolute.toFixed(2)}% / ${serverDetails.limits.cpu}%\`\`\``, inline: true },
                 { name: "Memory Usage", value: `\`\`\`${formatBytes(serverResourceUsage.resources.memory_bytes)} / ${formatMegabytes(serverDetails.limits.memory)}\`\`\``, inline: true },
                 { name: "Disk Usage", value: `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``, inline: true },
@@ -115,14 +98,14 @@ module.exports = {
         if (iconUrl) {
             embed.setThumbnail(iconUrl);
         }
-        if (minecraftPlayers !== null && maxPlayers !== null) {
+        if (extras && extras.players !== undefined && extras.maxPlayers !== undefined) {
             embed.addFields(
-                { name: "Players", value: `\`\`\`${minecraftPlayers} / ${maxPlayers}\`\`\``, inline: true },
+                { name: "Players", value: `\`\`\`${extras.players} / ${extras.maxPlayers}\`\`\``, inline: true },
             );
         }
-        if (minecraftVersion !== null) {
+        if (extras && extras.version !== undefined) {
             embed.addFields(
-                { name: "MC Version", value: `\`\`\`${minecraftVersion}\`\`\``, inline: true,  },
+                { name: "MC Version", value: `\`\`\`${extras.version}\`\`\``, inline: true,  },
             );
         }
         return embed;
