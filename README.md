@@ -68,6 +68,11 @@ Full support for:
 - Autocomplete (server listings, IDs, etc.)
 - Button interactions
 
+### • Extended API for more info about your servers
+  - Fetch Player counts for game servers that support it (e.g., Minecraft, FiveM)
+  - Fetch server version for game servers that support it (e.g., Minecraft)
+  - More features may be added in the future!
+
 
 ### • Flexible API Key System
 
