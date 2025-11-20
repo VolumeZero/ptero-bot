@@ -95,7 +95,7 @@ Supports:
      company: Your Pterodactyl panel's company name
      domain: Your Pterodactyl panel URL (e.g., https://panel.example.com)
      apiKey: Application API key for non-user-specific actions (not required)
-     cl_apiKey: A user API key with admin privileges for fetching server usages on NODE status embeds
+     cl_apiKey: A user API key with admin privileges for fetching server usages on NODE status embeds (Only required if you also have an Application API key)
      API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
   ```
 
@@ -110,10 +110,17 @@ Supports:
   - ```npm start```
 
 - 🔗 Link Api Key
-  - Use the ```/pt key``` command to link your Pterodactyl API key to your Discord user account.
+  - Use the ```/pt key``` command to link your personal Pterodactyl API key to your Discord user account if you want to manage your own servers.
 
 - ⚙️ Manage Your Servers
   - Use the ```/pt manage``` command to open the server manager for one of your linked servers!
+
+- 📝 Create Status Embeds
+  - Use the ```/pt {embed-type}-embed``` command to create server or node status embeds in your Discord server.
+    - Only the bot owner can use this command to avoid spam or misuse.
+    - Only one status embed per server or node is allowed to avoid spam.
+    - Nodes require an application API key and a cl_apiKey with admin privileges set in the config.
+    - Server status embeds only require a user-specific API key assigned with the ```/pt key``` command. This means you can create server status embeds for your servers even if you are not the owner of the pterodactyl panel.  
 
 
 ## 📋 Config Notes
