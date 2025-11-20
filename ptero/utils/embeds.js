@@ -82,7 +82,7 @@ module.exports = {
         const extras = await getServerExtras(ip, port);
 
         const embed = new EmbedBuilder()
-            .setAuthor({ name: `Status: ${serverPowerEmoji(serverPowerState)} ${serverPowerState.charAt(0).toUpperCase() + serverPowerState.slice(1)}` })
+            .setAuthor({ name: `Status: ${serverPowerEmoji(serverPowerState)}` })
             .setTitle(`${serverDetails.name}`)
             .setColor(embedColorFromStatus(serverPowerState))
             .setDescription(`Last updated <t:${Math.floor(Date.now() / 1000)}:R>`)

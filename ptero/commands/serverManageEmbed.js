@@ -4,7 +4,7 @@ const { pterodactyl } = require("../../config.json");
 const { loadApiKey } = require("../keys");
 const { WebSocket } = require("ws");
 const { getErrorMessage } = require("../utils/clientErrors");
-const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, stripAnsi } = require("../utils/serverUtils");
+const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, stripAnsi, embedConsoleStr } = require("../utils/serverUtils");
 
 
 const activeSessions = new Map(); // userId_serverId -> embed data
@@ -96,6 +96,9 @@ async function serverManageEmbed(interaction, serverId) {
 
                 { name: "Disk Usage", value: `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``, inline: true },
                 { name: "Uptime", value: `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``, inline: true },
+                //last three lines of logs
+                { name: "Console", value: logBuffer.length === 0 ? "Loading..." : `\`\`\`\n${embedConsoleStr(logBuffer, 3, 1024)}\n\`\`\``, inline: false },
+                
 
             )
             .setTimestamp()
@@ -144,6 +147,8 @@ async function serverManageEmbed(interaction, serverId) {
                 updateEmbedField(embed, "Memory Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.memory_bytes)} / ${formatMegabytes(serverDetails.limits.memory)}\`\`\``);
                 updateEmbedField(embed, "Disk Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``);
                 updateEmbedField(embed, "Uptime", `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``);
+                //add recent logs
+                updateEmbedField(embed, "Console", logBuffer.length === 0 ? "N/A..." : `\`\`\`\n${embedConsoleStr(logBuffer)}\n\`\`\``);
                 embed.setTimestamp();
             
                 await interaction.editReply({ embeds: [embed] });
@@ -157,7 +162,7 @@ async function serverManageEmbed(interaction, serverId) {
         const collector = interaction.channel.createMessageComponentCollector({
             filter: i => i.user.id === interaction.user.id,  
             time: 15 * 60 * 1000,
-            idle: 60_000            // ❗ 1 MINUTE INACTIVITY TIMEOUT
+            idle: 120_000            // ❗ 2 MINUTE INACTIVITY TIMEOUT
         });
 
         const cooldowns = new Map(); // userId -> timestamp
@@ -253,6 +258,7 @@ async function serverManageEmbed(interaction, serverId) {
                             updateEmbedField(embed, "Memory Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.memory_bytes)} / ${formatMegabytes(serverDetails.limits.memory)}\`\`\``);
                             updateEmbedField(embed, "Disk Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``);
                             updateEmbedField(embed, "Uptime", `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``);
+                            updateEmbedField(embed, "Console", logBuffer.length === 0 ? "N/A..." : `\`\`\`\n${embedConsoleStr(logBuffer)}\n\`\`\``);
                             embed.setTimestamp();
                             // Edit the original reply
                             await i.update({ embeds: [embed] });

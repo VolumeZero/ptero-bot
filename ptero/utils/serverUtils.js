@@ -1,13 +1,15 @@
 const { default: axios } = require("axios");
+const Nodeactyl = require("nodeactyl");
+const { pterodactyl } = require("../../config.json");
 
 // Helper functions
 function serverPowerEmoji(status) {
     switch (status) {
-        case "running": return "🟢";
-        case "offline": return "🔴";
-        case "starting": return "🟡";
-        case "stopping": return "🟠";
-        default: return "⚪";
+        case "running": return "🟢 Online";
+        case "offline": return "🔴 Offline";
+        case "starting": return "🟡 Starting";
+        case "stopping": return "🟠 Stopping";
+        default: return "⚪ Unknown";
     }
 }
 
@@ -36,10 +38,18 @@ function formatMegabytes(megabytes) {
 
 function stripAnsi(str) {
     return str
-        .replace(/\u001b\[[0-9;]*m/g, '')
-        .replace(/\u001b\].*?(\u0007|\u001b\\)/g, '')
-        .replace(/\u001b\[[0-9;]*K/g, '');
+        // ANSI escape sequences (CSI)
+        .replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, '')
+        // ANSI OSC sequences
+        .replace(/\x1b\].*?(?:\x07|\x1b\\)/g, '')
+        // Remove backspaces and the characters they delete
+        .replace(/.\x08/g, '')
+        // Remove stray escape characters
+        .replace(/\x1b/g, '')
+        // Cleanup leftover control chars
+        .replace(/[\x00-\x1F\x7F]/g, '');
 }
+
 
 
 function embedColorFromStatus(status) {
@@ -76,6 +86,37 @@ function embedColorFromWingsStatus(isOnline) {
     return isOnline ? 0x00FF00 : 0xFF0000; // Green if online, Red if offline
 }
 
+function embedConsoleStr(logBuffer, lineCount = 3, maxLength = 1024) {
+    // Normalize to array of lines
+    const lines = Array.isArray(logBuffer)
+        ? logBuffer
+        : logBuffer?.toString().trim().split("\n");
+
+    if (!lines || lines.length === 0) return "N/A...";
+
+    // Last X lines
+    let output = lines.slice(-lineCount).join("\n");
+
+    // Trim if too long
+    if (output.length > maxLength) {
+        output = output.slice(output.length - maxLength);
+    }
+
+    return output;
+}
+
+
+function isApplicationKeyValid(key) {
+    try {
+        const application = new Nodeactyl.NodeactylApplication(pterodactyl.domain, key);
+        if (application) {
+            return true;
+        } 
+    } catch (error) {
+        return false;
+    }
+    return false;
+}
 
 module.exports = {
     serverPowerEmoji,
@@ -86,4 +127,6 @@ module.exports = {
     embedColorFromStatus,
     embedColorFromWingsStatus,
     checkWings,
+    embedConsoleStr,
+    isApplicationKeyValid,
 };
