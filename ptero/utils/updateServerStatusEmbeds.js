@@ -67,6 +67,8 @@ module.exports = {
                     
                     await message.edit({ embeds: [embed] });
 
+                    //sleep for 1 second to avoid rate limits
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 } catch (error) {
                     console.error(`Error updating status embed for server ID ${msgInfo.serverId}:`, getErrorMessage(error));
                     console.error(`Does the owners client API key have access to this server?`);
