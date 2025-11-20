@@ -80,10 +80,12 @@ Supports:
 
 ## ⚙️ Configuration
 
-- Rename config.example.json to config.json and fill in all the required fields
 
 - Setup a Discord bot and get the bot token from the Discord Developer Portal: https://discord.com/developers/applications
-- Fill in the required fields in config.example.json:
+
+- Rename config.example.json to config.json
+
+- Fill in the required fields in config.json:
   ```
   token: Your Discord bot token
   owner: Your Discord user ID
@@ -92,8 +94,8 @@ Supports:
   pterodactyl:
      company: Your Pterodactyl panel's company name
      domain: Your Pterodactyl panel URL (e.g., https://panel.example.com)
-     apiKey: Application API key for global actions
-     cl_apiKey: A user API key with admin privileges for fetching server usages for status embeds
+     apiKey: Application API key for non-user-specific actions (not required)
+     cl_apiKey: A user API key with admin privileges for fetching server usages on NODE status embeds
      API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
   ```
 
