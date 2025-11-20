@@ -129,7 +129,9 @@ Supports:
 
 - guildId is only required for local development slash-command registration but is also recommended for single-server bots to speed up command registration.
 
-- cl_apiKey is required and used ONLY for getting server usages when updating status embeds since the application api does not have an endpoint for this. The user associated with this key must be an admin user to ensure all server usages can be fetched (unless you manually add the user to each server).
+- apiKey is required for any node-related actions, including node status embeds. More actions may be added in the future that require this key but their use will likely be intended for panel owners only.
+
+- cl_apiKey is required ONLY for getting node resource usages on node status embeds. It must belong to a user with admin privileges on the panel and has to be used alongside an application apiKey.  Use ```/pt key``` to link your own user-specific api key for managing your own servers and creating server status embeds.
 
 ## 📚 Documentation
 
