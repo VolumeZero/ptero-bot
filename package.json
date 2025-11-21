@@ -1,7 +1,7 @@
 {
-	"name": "discordbot-template",
+	"name": "ptero-bot",
 	"version": "3.3.0",
-	"description": "A modified template based on discordjs.guide to create your own discord-js based bot!",
+	"description": "A discord.js bot for managing Pterodactyl servers.",
 	"types": "./typings.d.ts",
 	"main": "bot.js",
 	"scripts": {
