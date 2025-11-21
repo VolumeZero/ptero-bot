@@ -23,6 +23,7 @@ module.exports = {
 		// Checks if the interaction is a modal interaction (to prevent weird bugs)
 
 		if (interaction.type !== InteractionType.ModalSubmit) return;
+		if (interaction.customId.startsWith("send_command_modal_")) return;
 
 		const command = client.modalCommands.get(interaction.customId);
 

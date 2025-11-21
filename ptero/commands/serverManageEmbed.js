@@ -106,20 +106,12 @@ async function serverManageEmbed(interaction, serverId) {
             .setFooter({ text: 'Powered by Pterodactyl', iconURL: 'https://p7.hiclipart.com/preview/978/71/779/pterodactyls-pteranodon-minecraft-pterosaurs-computer-servers-minecraft.jpg' });
 
         const buttons = [];
-
-        const logsButtonId = `get_console_logs_${interaction.user.id}_${serverId}`;
-        const consoleLogButton = new ButtonBuilder()
-            .setCustomId(logsButtonId)
-            .setLabel('Logs 📋')
-            .setStyle(ButtonStyle.Primary);
-        buttons.push(consoleLogButton);
-
-        const sftpInfoButtonId = `get_sftp_info_${interaction.user.id}_${serverId}`;
-        const sftpInfoButton = new ButtonBuilder()
-            .setCustomId(sftpInfoButtonId)
-            .setLabel('SFTP Info 🔑')
-            .setStyle(ButtonStyle.Secondary);
-        buttons.push(sftpInfoButton);
+        const sendCommandButtonId = `send_command_${interaction.user.id}_${serverId}`;
+        const sendCommandButton = new ButtonBuilder()
+            .setLabel('Send Command 🖥️')
+            .setStyle(ButtonStyle.Primary)
+            .setCustomId(sendCommandButtonId);
+        buttons.push(sendCommandButton);
 
         const panelLinkButton = new ButtonBuilder()
             .setLabel('View on Panel 🌐')
@@ -148,10 +140,26 @@ async function serverManageEmbed(interaction, serverId) {
             .setStyle(ButtonStyle.Secondary);
         buttons.push(refreshButton);
 
-        const actionRow1 = new ActionRowBuilder().addComponents(buttons.slice(0, 3));
-        const actionRow2 = new ActionRowBuilder().addComponents(buttons.slice(3, 6));
+        const sftpInfoButtonId = `get_sftp_info_${interaction.user.id}_${serverId}`;
+        const sftpInfoButton = new ButtonBuilder()
+            .setCustomId(sftpInfoButtonId)
+            .setLabel('SFTP Info 🔑')
+            .setStyle(ButtonStyle.Secondary);
+        buttons.push(sftpInfoButton);
 
-        await interaction.editReply({ embeds: [embed], components: [actionRow1, actionRow2] }); //initial reply
+        const logsButtonId = `get_console_logs_${interaction.user.id}_${serverId}`;
+        const consoleLogButton = new ButtonBuilder()
+            .setCustomId(logsButtonId)
+            .setLabel('Logs 📋')
+            .setStyle(ButtonStyle.Primary);
+        buttons.push(consoleLogButton);
+
+
+        const actionRow1 = new ActionRowBuilder().addComponents(buttons.slice(0, 2));
+        const actionRow2 = new ActionRowBuilder().addComponents(buttons.slice(2, 5));
+        const actionRow3 = new ActionRowBuilder().addComponents(buttons.slice(5, 7));
+
+        await interaction.editReply({ embeds: [embed], components: [actionRow1, actionRow2, actionRow3] });
 
         let liveUpdateInterval = setInterval(async () => {
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
@@ -276,6 +284,43 @@ async function serverManageEmbed(interaction, serverId) {
                         }
                         break;
                     }
+
+                    // 🖥️ SEND COMMAND BUTTON
+                    case sendCommandButtonId: {
+                        try {
+                            const modal = await createCommandModal(interaction.user.id, serverId);
+                            await buttonInteraction.showModal(modal);
+                            
+                            // Handle modal submission
+                            const modalFilter = (modalInteraction) => 
+                                modalInteraction.customId === `send_command_modal_${interaction.user.id}_${serverId}` &&
+                                modalInteraction.user.id === interaction.user.id;
+                            
+                            try {
+                                const modalSubmission = await buttonInteraction.awaitModalSubmit({ 
+                                    filter: modalFilter, 
+                                    time: 60000 
+                                });
+                                
+                                const command = modalSubmission.fields.getTextInputValue('command_input');
+                                
+                                // Send command via websocket
+                                pteroClient.sendServerCommand(serverId, command).then(async () => {
+                                    await modalSubmission.reply({ content: `Command \`${command}\` sent to server. Check the console/logs for more details.`, ephemeral: true });
+                                }).catch(async (err) => {
+                                    console.error("Error sending command:", err);
+                                    await modalSubmission.reply({ content: `Failed to send command \`${command}\` to server. Error: \`${getErrorMessage(err)}\``, ephemeral: true });
+                                });
+                            } catch (modalErr) {
+                                console.error("Modal submission timeout or error:", modalErr);
+                            }
+                            
+                        } catch (err) {
+                            console.error("Error showing modal:", err);
+                            await buttonInteraction.reply({ content: "Failed to show command modal.", ephemeral: true });
+                        }
+                        break;
+                    }
                 
                     default:
                         return buttonInteraction.reply({ content: "Unknown action.", ephemeral: true });
@@ -300,11 +345,14 @@ async function serverManageEmbed(interaction, serverId) {
                 console.error("Failed closing websocket:", err);
             }
             // Disable buttons
-            const disabledButtons1 = buttons.slice(0, 3).map(btn => ButtonBuilder.from(btn).setDisabled(true));
-            const disabledButtons2 = buttons.slice(3, 6).map(btn => ButtonBuilder.from(btn).setDisabled(true));
+            const disabledButtons1 = buttons.slice(0, 2).map(btn => ButtonBuilder.from(btn).setDisabled(true));
+            const disabledButtons2 = buttons.slice(2, 5).map(btn => ButtonBuilder.from(btn).setDisabled(true));
+            const disabledButtons3 = buttons.slice(5, 7).map(btn => ButtonBuilder.from(btn).setDisabled(true));
             const disabledRow1 = new ActionRowBuilder().addComponents(disabledButtons1);
             const disabledRow2 = new ActionRowBuilder().addComponents(disabledButtons2);
-            interaction.editReply({ content: "Session ended. Please run the command again or go to the web panel to manage your server.", components: [disabledRow1, disabledRow2] });
+            const disabledRow3 = new ActionRowBuilder().addComponents(disabledButtons3);
+            
+            interaction.editReply({ content: "Session ended. Please run the command again or go to the web panel to manage your server.", components: [disabledRow1, disabledRow2, disabledRow3] });
             
         });
 
@@ -337,4 +385,21 @@ async function updateAllEmbedFields(embed, serverDetails, serverResourceUsage, l
     //add recent logs
     updateEmbedField(embed, "Console", logBuffer.length === 0 ? "N/A" : `\`\`\`\n${embedConsoleStr(logBuffer)}\n\`\`\``);
     embed.setTimestamp();
+}
+
+async function createCommandModal(userId, serverId) {
+    const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require("discord.js");
+    const modal = new ModalBuilder()
+        .setCustomId(`send_command_modal_${userId}_${serverId}`)
+        .setTitle('Send Command to Server');
+    const commandInput = new TextInputBuilder()
+        .setCustomId('command_input')
+        .setLabel("Command")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("Enter the command to send to the server")
+        .setRequired(true)
+        .setMaxLength(128);
+    const firstActionRow = new ActionRowBuilder().addComponents(commandInput);
+    modal.addComponents(firstActionRow);
+    return modal;
 }
