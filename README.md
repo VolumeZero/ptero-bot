@@ -24,7 +24,7 @@ The bot includes a basic server management interface using Discord buttons and e
 - View live resource usage (CPU, RAM, Disk)
 - View server details (ID, Name, Status, Address, Uptime)
 - View SFTP details (username, password, port)
-- WebSocket-powered updates to avoid any rate limits
+- WebSocket-powered updates to avoid any rate limits while providing real-time info
 - Disable old sessions automatically when user starts a new one or after 60 seconds of inactivity
 - Only one active session per user
 - Any user with a linked API key can manage their own servers
