@@ -8,6 +8,7 @@ const { pterodactyl } = require("../config.json");
 const { ActivityType } = require("discord.js");
 const Nodeactyl = require("nodeactyl");
 const { updatePresence } = require("../utils/updatePresence");
+const { getAppErrorMessage } = require("../ptero/utils/appErrors");
 
 module.exports = {
     
@@ -36,7 +37,7 @@ module.exports = {
             }, 5 * 60 * 1000); // Update every 5 minutes
             console.log(`Status set: Watching ${totalServers} servers on ${pterodactyl.company}`);
         } catch (error) {
-            console.error("Error in clientReady event:", error);
+            console.error("Error in clientReady event:", getAppErrorMessage(error));
         }
     },
 

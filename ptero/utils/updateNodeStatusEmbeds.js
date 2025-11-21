@@ -1,6 +1,6 @@
 const fs = require("fs");
 const {createNodeStatusEmbed} = require("../utils/embeds");
-const { getErrorMessage } = require("../utils/clientErrors");
+const { getAppErrorMessage } = require("../utils/appErrors");
 
 module.exports = {
     updateNodeStatusEmbeds: async function (client, seconds) {
@@ -38,7 +38,7 @@ module.exports = {
                     const embed = await createNodeStatusEmbed(msgInfo.nodeId);
                     await message.edit({ embeds: [embed] });
                 } catch (error) {
-                    console.error(`Error updating node status embed for node ID ${msgInfo.nodeId}:`, getErrorMessage(error));
+                    console.error(`Error updating node status embed for node ID ${msgInfo.nodeId}:`, getAppErrorMessage(error));
                 }
             }
         };

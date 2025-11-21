@@ -3,6 +3,7 @@ const { EmbedBuilder } = require("discord.js");
 const { pterodactyl } = require("../../config.json");
 const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, checkWings, embedColorFromWingsStatus } = require("./serverUtils");
 const { getServerExtras } = require("./getServerExtras");
+const { getAppErrorMessage } = require("./appErrors");
 
 module.exports = {
     async createNodeStatusEmbed(nodeId) {
@@ -10,7 +11,12 @@ module.exports = {
         const appApiKey = pterodactyl.apiKey;
         const pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, appApiKey);
 
-        const nodeDetails = await pteroApp.getNodeDetails(nodeId);
+        const nodeDetails = await pteroApp.getNodeDetails(nodeId).catch((error) => {
+            console.error(`Error fetching node details for node ID ${nodeId}:`, getAppErrorMessage(error));
+            throw new Error(`Failed to fetch node details: ${error}`);
+        });
+
+        
         const nodeConfig = await pteroApp.getNodeConfig(nodeId);
         const locationDetails = await pteroApp.getLocationDetails(nodeDetails.location_id);
         const nodeAllocations = await pteroApp.getNodeAllocations(nodeId);
@@ -27,8 +33,16 @@ module.exports = {
         const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
         const nodeUsages = { cpu: 0, memory: 0, disk: 0, network_tx: 0, network_rx: 0
         };
+        let err = false;
         for (const server of servers) {
-            const usage = await pteroClient.getServerUsages(server.attributes.identifier).catch(() => null);
+
+            const usage = await pteroClient.getServerUsages(server.attributes.identifier).catch((error) => {
+                if (error === 401 || error === 403) {
+                    err = true;
+                    console.warn(`Warning: Unable to fetch usages for server ${server.attributes.name} (${server.attributes.identifier}) on node ${nodeDetails.name} due to insufficient permissions. Please ensure the user associated with the Client API key in the config.json has admin permissions.`);
+                }            
+            });
+
             if (usage && usage.resources) {
                 nodeUsages.cpu += usage.resources.cpu_absolute || 0;
                 nodeUsages.memory += usage.resources.memory_bytes || 0;
@@ -36,6 +50,9 @@ module.exports = {
                 nodeUsages.network_tx += usage.resources.network_tx_bytes || 0;
                 nodeUsages.network_rx += usage.resources.network_rx_bytes || 0;
             }
+        }
+        if (err) {
+            console.warn(`Warning: One or more server usages could not be fetched for node ${nodeId}. The node usages may be incomplete or inaccurate. You can safely ignore this message if you wish to continue using partial data for the node embed.`);
         }
 
         const wingsInfo = await checkWings(nodeDetails, nodeConfig.token); //contains {architecture: 'amd64',cpu_count: 4,kernel_version: '6.8.0-87-generic',os: 'linux',version: 'develop'}
