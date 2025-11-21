@@ -20,7 +20,7 @@ Even if you are not the owner of the Pterodactyl panel, you can still use user-s
 The bot includes a basic server management interface using Discord buttons and embeds:
 
 - Start / Stop / Restart server
-- View live console logs
+- View live console logs with the ability to send commands to the server
 - View live resource usage (CPU, RAM, Disk)
 - View server details (ID, Name, Status, Address, Uptime)
 - View SFTP details (username, password, port)
