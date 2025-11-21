@@ -60,11 +60,11 @@ async function serverManageEmbed(interaction, serverId) {
                 if (payload.event === "auth success") {
                     ws.send(JSON.stringify({ event: "send logs", args: [null] })); //this tells the websocket to send previous logs (the amount (lines) is determined by wings config i do believe)
                 } else if (payload.event === "console output") { //sent any time there is new console output
-                    logBuffer += stripAnsi(payload.args.join(" ")) + "\n";
-                    if (logBuffer.length > 10000) {
+                    logBuffer += stripAnsi(payload.args.join(" ")) + "\n"; //remove pterodactyl/wings ansi codes from logs
+                    if (logBuffer.length > 2048) {
                         logBuffer = logBuffer.slice(-2048); //really only need the last 2048 characters of logs, this helps memory usage
                     }
-                } else if (payload.event === "stats") { //normally this is sent once every second
+                } else if (payload.event === "stats") { //normally this is sent once every second unless the server is off then its only sent once upon auth success until the server is started
                     const liveStats = JSON.parse(payload.args[0]);
                     serverResourceUsage.current_state = liveStats.state;
                     serverResourceUsage.resources.cpu_absolute = liveStats.cpu_absolute;
@@ -299,16 +299,11 @@ async function serverManageEmbed(interaction, serverId) {
             } catch (err) {
                 console.error("Failed closing websocket:", err);
             }
-            const disabledRow1 = new ActionRowBuilder().addComponents(
-                consoleLogButton.setDisabled(true),
-                sftpInfoButton.setDisabled(true),
-                panelLinkButton.setDisabled(false)
-            );
-            const disabledRow2 = new ActionRowBuilder().addComponents(
-                stopServerButton.setDisabled(true),
-                restartServerButton.setDisabled(true),
-                refreshButton.setDisabled(true)
-            );
+            // Disable buttons
+            const disabledButtons1 = buttons.slice(0, 3).map(btn => ButtonBuilder.from(btn).setDisabled(true));
+            const disabledButtons2 = buttons.slice(3, 6).map(btn => ButtonBuilder.from(btn).setDisabled(true));
+            const disabledRow1 = new ActionRowBuilder().addComponents(disabledButtons1);
+            const disabledRow2 = new ActionRowBuilder().addComponents(disabledButtons2);
             interaction.editReply({ content: "Session ended. Please run the command again or go to the web panel to manage your server.", components: [disabledRow1, disabledRow2] });
             
         });
