@@ -102,9 +102,9 @@ Supports:
      apiKey: Application API key for non-user-specific actions (not required)
      cl_apiKey: A user API key with admin privileges for fetching server usages on NODE status embeds (Only required if you also have an Application API key)
      API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
-     MANAGER_EMBED_UPDATE_INTERVAL: 5, //seconds between resource usage updates in the server manager (uses websockets so discord rate limits are the main concern here)
-		 SERVER_STATUS_UPDATE_INTERVAL: 30, //seconds between server status embed updates
-		 NODE_STATUS_UPDATE_INTERVAL: 300 //seconds between node status embed updates
+     MANAGER_EMBED_UPDATE_INTERVAL: Seconds between resource usage updates in the server manager (uses websockets so discord rate limits are the main concern here)
+     SERVER_STATUS_UPDATE_INTERVAL: Seconds between server status embed updates
+     NODE_STATUS_UPDATE_INTERVAL: Seconds between node status embed updates
   ```
 
 - ▶️ Invite the Bot to Your Server
@@ -133,7 +133,7 @@ Supports:
 
 ## 📋 Config Notes
 
-- panelUrl must end with no trailing slash
+- domain must end with no trailing slash
 
 - guildId is only required for local development slash-command registration but is also recommended for single-server bots to speed up command registration.
 
