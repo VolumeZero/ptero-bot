@@ -6,6 +6,10 @@
  */
 
 const { InteractionType } = require("discord-api-types/v10");
+const Nodeactyl = require('nodeactyl');
+const { getErrorMessage } = require("../ptero/utils/clientErrors");
+const { loadApiKey } = require("../ptero/keys");
+const { pterodactyl } = require("../config.json");
 
 module.exports = {
 	name: "interactionCreate",
@@ -19,11 +23,46 @@ module.exports = {
 	async execute(interaction) {
 		// Deconstructed client from interaction object.
 		const { client } = interaction;
+	    const id = interaction.customId;
 
 		// Checks if the interaction is a modal interaction (to prevent weird bugs)
 
 		if (interaction.type !== InteractionType.ModalSubmit) return;
-		if (interaction.customId.startsWith("send_command_modal_")) return;
+		
+			
+		if (id.startsWith("send_command_modal_")) {
+			
+			const parts = id.split("_");
+			const userId = parts[3]; // send_command_modal_userId_serverId
+			const serverId = parts[4];
+			
+	    	// EXTRA SAFETY: ensure the modal belongs to same user
+	    	if (interaction.user.id !== userId) {
+	    	    return interaction.reply({ 
+	    	        content: "This modal isn't for you.", 
+	    	        ephemeral: true 
+	    	    });
+	    	}
+
+	    	const command = interaction.fields.getTextInputValue("command_input");
+
+	    	try {
+				const apiKey = await loadApiKey(interaction.user.id);
+				const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, apiKey);
+	    	    await pteroClient.sendServerCommand(serverId, command);
+	    	    await interaction.reply({
+	    	        content: `Command \`${command}\` sent to server. Check the console for more details.`,
+	    	        ephemeral: true
+	    	    });
+	    	} catch (err) {
+	    	    await interaction.reply({
+	    	        content: `Failed to send command: \`${getErrorMessage(err)}\``,
+	    	        ephemeral: true
+	    	    });
+			
+	    	}
+		} 
+
 
 		const command = client.modalCommands.get(interaction.customId);
 

@@ -291,33 +291,9 @@ async function serverManageEmbed(interaction, serverId) {
                             const modal = await createCommandModal(interaction.user.id, serverId);
                             await buttonInteraction.showModal(modal);
                             
-                            // Handle modal submission
-                            const modalFilter = (modalInteraction) => 
-                                modalInteraction.customId === `send_command_modal_${interaction.user.id}_${serverId}` &&
-                                modalInteraction.user.id === interaction.user.id;
-                            
-                            try {
-                                const modalSubmission = await buttonInteraction.awaitModalSubmit({ 
-                                    filter: modalFilter, 
-                                    time: 60000 
-                                });
-                                
-                                const command = modalSubmission.fields.getTextInputValue('command_input');
-                                
-                                // Send command via websocket
-                                pteroClient.sendServerCommand(serverId, command).then(async () => {
-                                    await modalSubmission.reply({ content: `Command \`${command}\` sent to server. Check the console/logs for more details.`, ephemeral: true });
-                                }).catch(async (err) => {
-                                    console.error("Error sending command:", err);
-                                    await modalSubmission.reply({ content: `Failed to send command \`${command}\` to server. Error: \`${getErrorMessage(err)}\``, ephemeral: true });
-                                });
-                            } catch (modalErr) {
-                                console.error("Modal submission timeout or error:", modalErr);
-                            }
-                            
                         } catch (err) {
-                            console.error("Error showing modal:", err);
-                            await buttonInteraction.reply({ content: "Failed to show command modal.", ephemeral: true });
+                            console.error("Error showing command modal:", err);
+                            return await buttonInteraction.reply({ content: "Failed to open command modal.", ephemeral: true });
                         }
                         break;
                     }
