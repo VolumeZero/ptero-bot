@@ -1,6 +1,6 @@
 const Nodeactyl = require("nodeactyl");
 const { EmbedBuilder } = require("discord.js");
-const { pterodactyl, NODE_STATUS_UPDATE_INTERVAL } = require("../../config.json");
+const { pterodactyl } = require("../../config.json");
 const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, checkWings, embedColorFromWingsStatus } = require("./serverUtils");
 const { getServerExtras } = require("./getServerExtras");
 
@@ -64,7 +64,7 @@ module.exports = {
                 { name: "Total Servers", value: `\`\`\`${servers.length}\`\`\``, inline: true },
                 { name: "Wings Version", value: `\`\`\`${wingsInfo ? wingsInfo.version : 'N/A'}\`\`\``, inline: true },
             )
-            .setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>\nNext update in <t:${Math.floor(Date.now() / 1000) + NODE_STATUS_UPDATE_INTERVAL}:R>`)
+            .setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>\nNext update in <t:${Math.floor(Date.now() / 1000) + pterodactyl.NODE_STATUS_UPDATE_INTERVAL}:R>`)
             .setTimestamp()
             .setFooter({ text: 'Powered by Pterodactyl', iconURL: 'https://p7.hiclipart.com/preview/978/71/779/pterodactyls-pteranodon-minecraft-pterosaurs-computer-servers-minecraft.jpg' });
 

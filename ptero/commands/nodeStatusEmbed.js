@@ -1,5 +1,5 @@
 const Nodeactyl = require("nodeactyl");
-const { pterodactyl, NODE_STATUS_UPDATE_INTERVAL } = require("../../config.json");
+const { pterodactyl } = require("../../config.json");
 const fs = require("fs");
 const { createNodeStatusEmbed } = require("../utils/embeds");
 
@@ -59,7 +59,7 @@ module.exports = {
         fs.writeFileSync("./ptero/data/nodeStatusMessages.json", JSON.stringify(statusMessages, null, 4));
         
         interaction.followUp({
-            content: `Node status embed for **${nodeDetails.name}** has been sent to this channel and will be updated every ${NODE_STATUS_UPDATE_INTERVAL} seconds.`,
+            content: `Node status embed for **${nodeDetails.name}** has been sent to this channel and will be updated every ${pterodactyl.NODE_STATUS_UPDATE_INTERVAL} seconds.`,
             ephemeral: true,
         });
 

@@ -4,7 +4,7 @@
 
 const { updateServerStatusEmbeds } = require("../ptero/utils/updateServerStatusEmbeds");
 const { updateNodeStatusEmbeds } = require("../ptero/utils/updateNodeStatusEmbeds");
-const { SERVER_STATUS_UPDATE_INTERVAL, pterodactyl, NODE_STATUS_UPDATE_INTERVAL } = require("../config.json");
+const { pterodactyl } = require("../config.json");
 const { ActivityType } = require("discord.js");
 const Nodeactyl = require("nodeactyl");
 const { updatePresence } = require("../utils/updatePresence");
@@ -16,8 +16,8 @@ module.exports = {
 
     async execute(client) {
         console.log(`Ready! Logged in as ${client.user.tag}`);
-        updateServerStatusEmbeds(client, SERVER_STATUS_UPDATE_INTERVAL);
-        updateNodeStatusEmbeds(client, NODE_STATUS_UPDATE_INTERVAL);
+        updateServerStatusEmbeds(client, pterodactyl.SERVER_STATUS_UPDATE_INTERVAL);
+        updateNodeStatusEmbeds(client, pterodactyl.NODE_STATUS_UPDATE_INTERVAL);
 
         // Set initial status
         const pteroApp = new Nodeactyl.NodeactylApplication(

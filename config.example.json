@@ -4,14 +4,15 @@
 	"owner": "YOUR_DISCORD_USER_ID_HERE",
 	"client_id": "DISCORD_BOT_CLIENT/USER_ID_HERE",
 	"test_guild_id": "DISCORD_SERVER_ID_HERE",
-	"SERVER_STATUS_UPDATE_INTERVAL": 30,
-	"NODE_STATUS_UPDATE_INTERVAL": 300,
 	"pterodactyl": {
 		"company": "Pterodactyl",
 		"domain": "https://YOUR_PTERODACTYL_PANEL_URL_HERE",
 		"apiKey": "APPLICATION_APIKEY_HERE_IF_AVAILABLE",
 		"cl_apiKey": "YOUR_PANEL_API_KEY_HERE",
-		"API_ENCRYPTION_KEY": "ChangeThisToASecureRandomString"
+		"API_ENCRYPTION_KEY": "ChangeThisToASecureRandomString",
+		"MANAGER_EMBED_UPDATE_INTERVAL": 5,
+		"SERVER_STATUS_UPDATE_INTERVAL": 30,
+		"NODE_STATUS_UPDATE_INTERVAL": 300
 	}
 
 }
