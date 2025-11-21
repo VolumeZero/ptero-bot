@@ -320,8 +320,9 @@ async function serverManageEmbed(interaction, serverId) {
             } catch (err) {
                 console.error("Failed closing websocket:", err);
             }
-            // Disable buttons
+            // Disable buttons (all except panel link)
             const disabledButtons1 = buttons.slice(0, 2).map(btn => ButtonBuilder.from(btn).setDisabled(true));
+            disabledButtons1[1] = buttons[1]; //keep panel link enabled
             const disabledButtons2 = buttons.slice(2, 5).map(btn => ButtonBuilder.from(btn).setDisabled(true));
             const disabledButtons3 = buttons.slice(5, 7).map(btn => ButtonBuilder.from(btn).setDisabled(true));
             const disabledRow1 = new ActionRowBuilder().addComponents(disabledButtons1);
