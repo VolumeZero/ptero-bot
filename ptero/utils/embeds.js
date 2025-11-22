@@ -121,14 +121,20 @@ module.exports = {
                         const wingsLogs = await wingsApiReq(node.attributes, nodeConfig.token, `servers/${serverDetails.uuid}/logs`).catch((error) => {
                             //console.warn(`Error fetching logs for server ID ${serverId} from wings:`, getAppErrorMessage(error));
                         });
-                        if (wingsLogs && wingsLogs.data) {
+                        if (wingsLogs?.data) {
                             const last3 = wingsLogs.data.slice(-3);
-                            //make sure its no more than 512 characters
-                            latestLogs = stripAnsi(last3.join('\n'));
+
+                            latestLogs = last3
+                                .map(line => stripAnsi(line.replace(/^\[\s*\w+:\w+\]\s*/, '')))
+                                .join('\n'); // preserve newlines
+
+                            // Trim to 512 characters if needed
                             if (latestLogs.length > 512) {
                                 latestLogs = latestLogs.slice(-512);
                             }
                         }
+
+
                     }
                 }
             }
