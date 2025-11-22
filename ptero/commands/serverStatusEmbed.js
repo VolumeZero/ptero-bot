@@ -5,7 +5,7 @@ const { loadApiKey } = require("../keys");
 const fs = require("fs");
 const { createServerStatusEmbed } = require("../utils/embeds");
 
-async function sendServerStatusEmbed(interaction, serverId, iconUrl) {
+async function sendServerStatusEmbed(interaction, serverId, iconUrl, enableLogs) {
     //defer reply
     await interaction.deferReply({ ephemeral: true });
 
@@ -57,7 +57,15 @@ async function sendServerStatusEmbed(interaction, serverId, iconUrl) {
 
     //send to the current channel and save the message ID for future updates
     const message = await interaction.channel.send({ embeds: [embed] });
-    statusMessages.push({ serverId: serverId, messageId: message.id, channelId: interaction.channel.id, iconUrl: iconUrl, userId: interaction.user.id }); //save the user id so we can use their api key later to update the embed
+    statusMessages.push({ //save the user id so we can use their api key later to update the embed
+        name: serverDetails.name,
+        serverId: serverId, 
+        messageId: message.id,
+        channelId: interaction.channel.id,
+        iconUrl: iconUrl,
+        userId: interaction.user.id,
+        enableLogs: enableLogs,
+    }); 
     //save statusMessages array to json file
     fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
     interaction.followUp({ content: `Status embed sent for server **${serverDetails.name}**. It will update every ${pterodactyl.SERVER_STATUS_UPDATE_INTERVAL} seconds.`, ephemeral: true });

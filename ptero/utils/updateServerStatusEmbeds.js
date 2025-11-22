@@ -61,6 +61,11 @@ module.exports = {
                         //save updated statusMessages array to json file
                         fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
                         continue;
+                    }  
+
+                    if (msgInfo.enableLogs === undefined) {
+                        msgInfo.enableLogs = false; //default to false for older embeds
+                        fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
                     }
 
                     const embed = await createServerStatusEmbed(msgInfo.serverId, apiKey, msgInfo.iconUrl);

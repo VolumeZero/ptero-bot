@@ -1,7 +1,7 @@
 const Nodeactyl = require("nodeactyl");
 const { EmbedBuilder } = require("discord.js");
 const { pterodactyl } = require("../../config.json");
-const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, checkWings, embedColorFromWingsStatus } = require("./serverUtils");
+const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, checkWings, embedColorFromWingsStatus, embedConsoleStr } = require("./serverUtils");
 const { getServerExtras } = require("./getServerExtras");
 const { getAppErrorMessage } = require("./appErrors");
 const { wingsApiReq } = require("../requests/wingsApiReq");
@@ -93,7 +93,7 @@ module.exports = {
         return embed;
     },
 
-    async createServerStatusEmbed(serverId, clientApiKey, iconUrl) {
+    async createServerStatusEmbed(serverId, clientApiKey, iconUrl, enableLogs) {
         const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
         const serverDetails = await pteroClient.getServerDetails(serverId);
         const serverResourceUsage = await pteroClient.getServerUsages(serverId);
@@ -102,6 +102,33 @@ module.exports = {
         const ip = defaultAllocation.attributes.ip_alias || defaultAllocation.attributes.ip;
         const port = defaultAllocation.attributes.port;
         const extras = await getServerExtras(ip, port);
+        let latestLogs = null;
+
+
+        if (pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs) {
+            //try and get the logs using an api request to wings (need an appliction api key with server.read permission) This will be optional so users without an api key can still use the bot
+            const pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, pterodactyl.apiKey);
+            const nodes = await pteroApp.getAllNodes().catch((error) => { //do nothing since this is an optional feature
+                //console.warn(`Error fetching all nodes:`, getAppErrorMessage(error)); 
+            });
+            if (nodes !== undefined && nodes.data !== undefined) { 
+                const node = nodes.data.find(n => n.attributes.fqdn === serverDetails.sftp_details.ip);
+                if (node) {
+                    const nodeConfig = await pteroApp.getNodeConfig(node.attributes.id).catch((error) => {
+                        //console.warn(`Error fetching node config for node ID ${node.attributes.id}:`, getAppErrorMessage(error));
+                    });
+                    if (nodeConfig) {
+                        const wingsLogs = await wingsApiReq(node.attributes, nodeConfig.token, `servers/${serverDetails.uuid}/logs`).catch((error) => {
+                            //console.warn(`Error fetching logs for server ID ${serverId} from wings:`, getAppErrorMessage(error));
+                        });
+                        if (wingsLogs && wingsLogs.data && wingsLogs.data.length > 0) {
+                            latestLogs = embedConsoleStr(wingsLogs.data, 3, 800); //get last 3 lines with max 800 characters
+                            console.log(latestLogs);
+                        }
+                    }
+                }
+            }
+        }
 
         const embed = new EmbedBuilder()
             .setAuthor({ name: `Status: ${serverPowerEmoji(serverPowerState)}` })
@@ -128,6 +155,11 @@ module.exports = {
         if (extras && extras.version !== undefined) {
             embed.addFields(
                 { name: "MC Version", value: `\`\`\`${extras.version}\`\`\``, inline: true,  },
+            );
+        }
+        if (latestLogs && pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs) {
+            embed.addFields(
+                { name: "Latest Logs", value: `\`\`\`${latestLogs}\`\`\``, inline: false },
             );
         }
         return embed;

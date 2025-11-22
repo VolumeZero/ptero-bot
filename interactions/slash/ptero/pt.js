@@ -56,6 +56,12 @@ module.exports = {
                         .setDescription("Optional URL for a custom icon to use in the embed.")
                         .setRequired(false)
                 )
+                .addBooleanOption(option =>
+                    option
+                        .setName("enable_logs")
+                        .setDescription("Enable console logs in the embed if available.")
+                        .setRequired(false)
+                )
         )
         .addSubcommand(sub =>
             sub
@@ -137,7 +143,8 @@ module.exports = {
 
             try {
                 const iconUrl = interaction.options.getString("icon_url");
-                await sendServerStatusEmbed(interaction, serverId, iconUrl); //will be bot owner only and use application api
+                const enableLogs = interaction.options.getBoolean("enable_logs") || false;
+                await sendServerStatusEmbed(interaction, serverId, iconUrl, enableLogs); //will be bot owner only and use application api
             } catch (error) {
                 console.error("Error in server-embed command:", error);
                 return interaction.followUp({
