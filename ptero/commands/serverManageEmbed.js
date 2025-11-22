@@ -103,7 +103,7 @@ async function serverManageEmbed(interaction, serverId) {
 
             )
             .setTimestamp()
-            .setFooter({ text: 'Powered by Pterodactyl', iconURL: 'https://p7.hiclipart.com/preview/978/71/779/pterodactyls-pteranodon-minecraft-pterosaurs-computer-servers-minecraft.jpg' });
+            .setFooter({ text: `${pterodactyl.EMBED_FOOTER_TEXT}`, iconURL: `${pterodactyl.EMBED_FOOTER_ICON_URL}` });
 
         const buttons = [];
         const sendCommandButtonId = `send_command_${interaction.user.id}_${serverId}`;

@@ -88,7 +88,7 @@ module.exports = {
             )
             .setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>\nNext update in <t:${Math.floor(Date.now() / 1000) + pterodactyl.NODE_STATUS_UPDATE_INTERVAL}:R>`)
             .setTimestamp()
-            .setFooter({ text: 'Powered by Pterodactyl', iconURL: 'https://p7.hiclipart.com/preview/978/71/779/pterodactyls-pteranodon-minecraft-pterosaurs-computer-servers-minecraft.jpg' });
+            .setFooter({ text: `${pterodactyl.EMBED_FOOTER_TEXT}`, iconURL: `${pterodactyl.EMBED_FOOTER_ICON_URL}` });
 
         return embed;
     },
@@ -149,7 +149,7 @@ module.exports = {
                 { name: "Uptime", value: `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``, inline: true },
             )
             .setTimestamp()
-            .setFooter({ text: 'Powered by Pterodactyl', iconURL: 'https://p7.hiclipart.com/preview/978/71/779/pterodactyls-pteranodon-minecraft-pterosaurs-computer-servers-minecraft.jpg' });
+            .setFooter({ text: `${pterodactyl.EMBED_FOOTER_TEXT}`, iconURL: `${pterodactyl.EMBED_FOOTER_ICON_URL}` });
         if (iconUrl) {
             embed.setThumbnail(iconUrl);
         }
