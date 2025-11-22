@@ -4,7 +4,7 @@ const { pterodactyl } = require('../../config.json');
 module.exports = {
     async wingsApiReq(nodeDetails, nodeToken, apiEndpoint, method = 'get', data = null) {
         try {
-            const url = `https://${nodeDetails.fqdn}:${nodeDetails.daemon_listen}/api/${apiEndpoint}`;
+            const url = `${nodeDetails.scheme}://${nodeDetails.fqdn}:${nodeDetails.daemon_listen}/api/${apiEndpoint}`;
             const headers = {
                 'Authorization': `Bearer ${nodeToken}`,
                 'Accept': '*/*',

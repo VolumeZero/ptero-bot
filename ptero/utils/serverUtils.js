@@ -64,7 +64,7 @@ function embedColorFromStatus(status) {
 
 async function checkWings(nodeDetails, token) {
     try {
-        const res = await axios.get(`https://${nodeDetails.fqdn}:${nodeDetails.daemon_listen}/api/system`, {
+        const res = await axios.get(`${nodeDetails.scheme}://${nodeDetails.fqdn}:${nodeDetails.daemon_listen}/api/system`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': '*/*',
