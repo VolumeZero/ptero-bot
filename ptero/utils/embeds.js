@@ -75,7 +75,7 @@ module.exports = {
             .setColor(embedColorFromWingsStatus(nodeStatus))
             .addFields(
                 { name: "FQDN", value: `\`\`\`${nodeDetails.fqdn}\`\`\``, inline: false },
-                { name: `CPU Usage (${wingsInfo.cpu_count}c)`, value: `\`\`\`${nodeUsages.cpu.toFixed(2)} %\`\`\``, inline: true },
+                { name: `CPU Usage (${wingsInfo.cpu_count}c)`, value: `\`\`\`${nodeUsages.cpu.toFixed(2)}%\`\`\``, inline: true },
                 { name: "Memory Usage", value: `\`\`\`${formatBytes(nodeUsages.memory)} / ${formatMegabytes(nodeDetails.memory)}\`\`\``, inline: true },
                 { name: "Disk Usage", value: `\`\`\`${formatBytes(nodeUsages.disk)} / ${formatMegabytes(nodeDetails.disk)}\`\`\``, inline: true },
                 { name: "Network ↑", value: `\`\`\`${formatBytes(nodeUsages.network_tx)}\`\`\``, inline: true },
@@ -137,7 +137,7 @@ module.exports = {
         }
 
         const embed = new EmbedBuilder()
-            .setAuthor({ name: `Status: ${serverPowerEmoji(serverPowerState)}` })
+            .setAuthor({ name: `${serverDetails.identifier} - Status: ${serverPowerEmoji(serverPowerState)}` })
             .setTitle(`${serverDetails.name}`)
             .setColor(embedColorFromStatus(serverPowerState))
             .setDescription(`Last updated <t:${Math.floor(Date.now() / 1000)}:R>`)
