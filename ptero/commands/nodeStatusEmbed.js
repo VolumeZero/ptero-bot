@@ -52,6 +52,7 @@ module.exports = {
         //save message ID and channel ID to file for future updates
         const sentMessage = await interaction.channel.send({ embeds: [embed] });
         statusMessages.push({
+            name: nodeDetails.name,
             nodeId: nodeId,
             channelId: interaction.channel.id,
             messageId: sentMessage.id,
