@@ -29,14 +29,14 @@ module.exports = {
             throw new Error(`Failed to fetch servers for node: ${error}`);
         });
 
-        let assignedAllocations = 0;
         const nodeUsages = { 
             cpu: 0, 
             memory: 0, 
             disk: 0, 
             network_tx: 0, 
             network_rx: 0,
-            allocations: 0
+            allocations: 0,
+            onlineServers: 0
         };
         let err = false;
         for (const server of servers) {
@@ -51,7 +51,10 @@ module.exports = {
                 err = true;
             }
             const mappings = server.configuration.allocations.mappings;
-            nodeUsages.allocations += Object.keys(mappings).length || 0;            
+            nodeUsages.allocations += Object.keys(mappings).length || 0;
+            if (server.state === 'running') {
+                nodeUsages.onlineServers += 1;
+            }
         }
         if (err) {
             console.warn(`Warning: One or more server usages could not be fetched for node ${nodeId}. The node usages may be incomplete or inaccurate. You can safely ignore this message if you wish to continue using partial data for the node embed.`);
@@ -75,12 +78,12 @@ module.exports = {
                 { name: `CPU Usage (${wingsInfo.cpu_count}c)`, value: `\`\`\`${nodeUsages.cpu.toFixed(2)} %\`\`\``, inline: true },
                 { name: "Memory Usage", value: `\`\`\`${formatBytes(nodeUsages.memory)} / ${formatMegabytes(nodeDetails.memory)}\`\`\``, inline: true },
                 { name: "Disk Usage", value: `\`\`\`${formatBytes(nodeUsages.disk)} / ${formatMegabytes(nodeDetails.disk)}\`\`\``, inline: true },
-                { name: "Network TX", value: `\`\`\`${formatBytes(nodeUsages.network_tx)}\`\`\``, inline: true },
-                { name: "Network RX", value: `\`\`\`${formatBytes(nodeUsages.network_rx)}\`\`\``, inline: true },
+                { name: "Network ↑", value: `\`\`\`${formatBytes(nodeUsages.network_tx)}\`\`\``, inline: true },
+                { name: "Network ↓", value: `\`\`\`${formatBytes(nodeUsages.network_rx)}\`\`\``, inline: true },
 
                 { name: "Location", value: `\`\`\`${locationDetails.short}\`\`\``, inline: true },
                 { name: "Allocations", value: `\`\`\`${nodeUsages.allocations} / ${allocationCount}\`\`\``, inline: true },
-                { name: "Total Servers", value: `\`\`\`${servers.length}\`\`\``, inline: true },
+                { name: "Servers Running", value: `\`\`\`${nodeUsages.onlineServers} / ${servers.length}\`\`\``, inline: true },
                 { name: "Wings Version", value: `\`\`\`${wingsInfo ? wingsInfo.version : 'N/A'}\`\`\``, inline: true },
             )
             .setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>\nNext update in <t:${Math.floor(Date.now() / 1000) + pterodactyl.NODE_STATUS_UPDATE_INTERVAL}:R>`)
