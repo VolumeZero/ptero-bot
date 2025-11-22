@@ -103,6 +103,7 @@ Supports:
      API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
      MANAGER_EMBED_UPDATE_INTERVAL: Seconds between resource usage updates in the server manager (uses websockets so discord rate limits are the main concern here)
      SERVER_STATUS_UPDATE_INTERVAL: Seconds between server status embed updates
+     ENABLE_SERVER_STATUS_CONSOLE_LOGS: Enable or disable console logs in server status embeds (requires an apiKey with server.read permissions to access wings api)
      NODE_STATUS_UPDATE_INTERVAL: Seconds between node status embed updates
   ```
 
