@@ -5,7 +5,6 @@ module.exports = {
     async wingsApiReq(nodeDetails, nodeToken, apiEndpoint, method = 'get', data = null) {
         try {
             const url = `https://${nodeDetails.fqdn}:${nodeDetails.daemon_listen}/api/${apiEndpoint}`;
-            console.log(`Making Wings API request to ${url} on node ${nodeDetails.name}`);
             const headers = {
                 'Authorization': `Bearer ${nodeToken}`,
                 'Accept': '*/*',
