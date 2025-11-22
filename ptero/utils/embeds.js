@@ -4,6 +4,7 @@ const { pterodactyl } = require("../../config.json");
 const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, checkWings, embedColorFromWingsStatus } = require("./serverUtils");
 const { getServerExtras } = require("./getServerExtras");
 const { getAppErrorMessage } = require("./appErrors");
+const { wingsApiReq } = require("../requests/wingsApiReq");
 
 module.exports = {
     async createNodeStatusEmbed(nodeId) {
@@ -22,33 +23,25 @@ module.exports = {
         const nodeAllocations = await pteroApp.getNodeAllocations(nodeId);
         const allocationCount = nodeAllocations.data.length;
         
-        //to get usage stats we need to get all servers on this node and sum their usages (easy way)
-        const serversResponse = await pteroApp.getAllServers();
         //filter servers to only those on this node
-        const servers = serversResponse.data.filter(server => server.attributes.node === parseInt(nodeId));
+        const servers = await wingsApiReq(nodeDetails, nodeConfig.token, 'servers').catch((error) => {
+            console.error(`Error fetching servers for node ID ${nodeId}:`, getAppErrorMessage(error));
+            throw new Error(`Failed to fetch servers for node: ${error}`);
+        });
 
-
-        //use client api key with admin access to get server usages since app api key cannot access server usages for some reason
-        const clientApiKey = pterodactyl.cl_apiKey;
-        const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
         const nodeUsages = { cpu: 0, memory: 0, disk: 0, network_tx: 0, network_rx: 0
         };
         let err = false;
         for (const server of servers) {
-
-            const usage = await pteroClient.getServerUsages(server.attributes.identifier).catch((error) => {
-                if (error === 401 || error === 403) {
-                    err = true;
-                    console.warn(`Warning: Unable to fetch usages for server ${server.attributes.name} (${server.attributes.identifier}) on node ${nodeDetails.name} due to insufficient permissions. Please ensure the user associated with the Client API key in the config.json has admin permissions.`);
-                }            
-            });
-
-            if (usage && usage.resources) {
-                nodeUsages.cpu += usage.resources.cpu_absolute || 0;
-                nodeUsages.memory += usage.resources.memory_bytes || 0;
-                nodeUsages.disk += usage.resources.disk_bytes || 0;
-                nodeUsages.network_tx += usage.resources.network_tx_bytes || 0;
-                nodeUsages.network_rx += usage.resources.network_rx_bytes || 0;
+            const usage = server.utilization;
+            if (usage) {
+                nodeUsages.cpu += usage.cpu_absolute || 0;
+                nodeUsages.memory += usage.memory_bytes || 0;
+                nodeUsages.disk += usage.disk_bytes || 0;
+                nodeUsages.network_tx += usage.network.tx_bytes || 0;
+                nodeUsages.network_rx += usage.network.rx_bytes || 0;
+            } else {
+                err = true;
             }
         }
         if (err) {
