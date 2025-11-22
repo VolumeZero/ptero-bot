@@ -6,11 +6,13 @@ module.exports = {
     async getServerExtras(ip, port) {
         let extras = {};
         //try getting minecraft server status
-        let minecraftPlayers = null;
-        let maxPlayers = null;
-        let minecraftVersion = null;
         try {
+
+            let minecraftPlayers = null;
+            let maxPlayers = null;
+            let minecraftVersion = null;
             const mcStatus = await mcs.statusJava(ip, port, { timeout: 5000 });
+
             if (mcStatus && mcStatus.players) {
                 minecraftPlayers = mcStatus.players.online;
                 maxPlayers = mcStatus.players.max;
