@@ -99,8 +99,7 @@ Supports:
   pterodactyl:
      company: Your Pterodactyl panel's company name
      domain: Your Pterodactyl panel URL (e.g., https://panel.example.com)
-     apiKey: Application API key for non-user-specific actions (not required)
-     cl_apiKey: A user API key with admin privileges for fetching server usages on NODE status embeds (Only required if you also have an Application API key)
+     apiKey: Application API key for non-user-specific actions (Only required for node status embeds/panel owner actions)
      API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
      MANAGER_EMBED_UPDATE_INTERVAL: Seconds between resource usage updates in the server manager (uses websockets so discord rate limits are the main concern here)
      SERVER_STATUS_UPDATE_INTERVAL: Seconds between server status embed updates
@@ -117,7 +116,7 @@ Supports:
 - ▶️ Run the Bot
   - ```npm start```
 
-- 🔗 Link Api Key
+- 🔗 Link Client Api Key
   - Use the ```/pt key``` command to link your personal Pterodactyl API key to your Discord user account if you want to manage your own servers.
 
 - ⚙️ Manage Your Servers
@@ -127,7 +126,7 @@ Supports:
   - Use the ```/pt {embed-type}-embed``` command to create server or node status embeds in your Discord server.
     - Only the bot owner can use this command to avoid spam or misuse.
     - Only one status embed per server or node is allowed to avoid spam.
-    - Nodes require an application API key and a cl_apiKey with admin privileges set in the config.
+    - Nodes require an application API key set in the config.
     - Server status embeds only require a user-specific API key assigned with the ```/pt key``` command. This means you can create server status embeds for your servers even if you are not the owner of the pterodactyl panel.  
 
 
@@ -138,8 +137,6 @@ Supports:
 - guildId is only required for local development slash-command registration but is also recommended for single-server bots to speed up command registration.
 
 - apiKey is required for any node-related actions, including node status embeds. More actions may be added in the future that require this key but their use will likely be intended for panel owners only.
-
-- cl_apiKey is required ONLY for getting node resource usages on node status embeds. It must belong to a user with admin privileges on the panel and has to be used alongside an application apiKey.  Use ```/pt key``` to link your own user-specific api key for managing your own servers and creating server status embeds.
 
 ## 📚 Documentation
 
