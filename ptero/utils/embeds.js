@@ -23,13 +23,20 @@ module.exports = {
         const nodeAllocations = await pteroApp.getNodeAllocations(nodeId);
         const allocationCount = nodeAllocations.data.length;
         
-        //filter servers to only those on this node
+        //filter servers to only those on this node using wings api
         const servers = await wingsApiReq(nodeDetails, nodeConfig.token, 'servers').catch((error) => {
             console.error(`Error fetching servers for node ID ${nodeId}:`, getAppErrorMessage(error));
             throw new Error(`Failed to fetch servers for node: ${error}`);
         });
 
-        const nodeUsages = { cpu: 0, memory: 0, disk: 0, network_tx: 0, network_rx: 0
+        let assignedAllocations = 0;
+        const nodeUsages = { 
+            cpu: 0, 
+            memory: 0, 
+            disk: 0, 
+            network_tx: 0, 
+            network_rx: 0,
+            allocations: 0
         };
         let err = false;
         for (const server of servers) {
@@ -43,6 +50,8 @@ module.exports = {
             } else {
                 err = true;
             }
+            const mappings = server.configuration.allocations.mappings;
+            nodeUsages.allocations += Object.keys(mappings).length || 0;            
         }
         if (err) {
             console.warn(`Warning: One or more server usages could not be fetched for node ${nodeId}. The node usages may be incomplete or inaccurate. You can safely ignore this message if you wish to continue using partial data for the node embed.`);
@@ -70,7 +79,7 @@ module.exports = {
                 { name: "Network RX", value: `\`\`\`${formatBytes(nodeUsages.network_rx)}\`\`\``, inline: true },
 
                 { name: "Location", value: `\`\`\`${locationDetails.short}\`\`\``, inline: true },
-                { name: "Allocations", value: `\`\`\`${allocationCount}\`\`\``, inline: true },
+                { name: "Allocations", value: `\`\`\`${nodeUsages.allocations} / ${allocationCount}\`\`\``, inline: true },
                 { name: "Total Servers", value: `\`\`\`${servers.length}\`\`\``, inline: true },
                 { name: "Wings Version", value: `\`\`\`${wingsInfo ? wingsInfo.version : 'N/A'}\`\`\``, inline: true },
             )
