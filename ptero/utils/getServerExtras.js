@@ -41,7 +41,6 @@ module.exports = {
         try {
             const response = await axios.get(`http://${ip}:${port}/info.json`, { timeout: 5000 });
             if (response.data && response.data.vars.Players) {
-                console.log(response.data);
                 extras = {
                     players: response.data.vars.Players, //query players.json for more player info if needed
                     maxPlayers: response.data.vars.sv_maxClients,
