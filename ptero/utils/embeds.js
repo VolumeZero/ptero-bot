@@ -97,7 +97,7 @@ module.exports = {
         const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
         const serverDetails = await pteroClient.getServerDetails(serverId);
         const serverResourceUsage = await pteroClient.getServerUsages(serverId);
-        const serverPowerState = await pteroClient.getServerStatus(serverId);
+        const serverPowerState = serverResourceUsage.current_state;
         const defaultAllocation = serverDetails.relationships.allocations.data.find(alloc => alloc.attributes.is_default);
         const ip = defaultAllocation.attributes.ip_alias || defaultAllocation.attributes.ip;
         const port = defaultAllocation.attributes.port;
