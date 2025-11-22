@@ -8,7 +8,6 @@
 		"company": "Pterodactyl",
 		"domain": "https://YOUR_PTERODACTYL_PANEL_URL_HERE",
 		"apiKey": "APPLICATION_APIKEY_HERE_IF_AVAILABLE",
-		"cl_apiKey": "YOUR_PANEL_API_KEY_HERE",
 		"API_ENCRYPTION_KEY": "ChangeThisToASecureRandomString",
 		"MANAGER_EMBED_UPDATE_INTERVAL": 5,
 		"SERVER_STATUS_UPDATE_INTERVAL": 30,
