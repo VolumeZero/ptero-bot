@@ -160,7 +160,7 @@ module.exports = {
         }
         if (extras && extras.version !== undefined) {
             embed.addFields(
-                { name: "MC Version", value: `\`\`\`${extras.version}\`\`\``, inline: true,  },
+                { name: "Version", value: `\`\`\`${extras.version}\`\`\``, inline: true,  },
             );
         }
         if (latestLogs && pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs) {
