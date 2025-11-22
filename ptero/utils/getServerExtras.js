@@ -41,9 +41,11 @@ module.exports = {
         try {
             const response = await axios.get(`http://${ip}:${port}/info.json`, { timeout: 5000 });
             if (response.data && response.data.vars.Players) {
+                console.log(response.data);
                 extras = {
                     players: response.data.vars.Players, //query players.json for more player info if needed
-                    maxPlayers: response.data.vars.sv_maxClients
+                    maxPlayers: response.data.vars.sv_maxClients,
+                    version: response.data.server.match(/v[\d.]+/)[0]
                 };
                 return extras; //end here if we found fivem info since there would be no point in checking further
             }
