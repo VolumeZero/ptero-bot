@@ -53,7 +53,7 @@ async function sendServerStatusEmbed(interaction, serverId, iconUrl, enableLogs)
         }
     }
 
-    const embed = await createServerStatusEmbed(serverId, clientApiKey, iconUrl);
+    const embed = await createServerStatusEmbed(serverId, clientApiKey, iconUrl, enableLogs);
 
     //send to the current channel and save the message ID for future updates
     const message = await interaction.channel.send({ embeds: [embed] });
