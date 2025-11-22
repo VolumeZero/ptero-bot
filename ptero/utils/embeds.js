@@ -1,7 +1,7 @@
 const Nodeactyl = require("nodeactyl");
 const { EmbedBuilder } = require("discord.js");
 const { pterodactyl } = require("../../config.json");
-const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, checkWings, embedColorFromWingsStatus, embedConsoleStr } = require("./serverUtils");
+const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, checkWings, embedColorFromWingsStatus, embedConsoleStr, stripAnsi } = require("./serverUtils");
 const { getServerExtras } = require("./getServerExtras");
 const { getAppErrorMessage } = require("./appErrors");
 const { wingsApiReq } = require("../requests/wingsApiReq");
@@ -121,9 +121,13 @@ module.exports = {
                         const wingsLogs = await wingsApiReq(node.attributes, nodeConfig.token, `servers/${serverDetails.uuid}/logs`).catch((error) => {
                             //console.warn(`Error fetching logs for server ID ${serverId} from wings:`, getAppErrorMessage(error));
                         });
-                        if (wingsLogs && wingsLogs.data && wingsLogs.data.length > 0) {
-                            latestLogs = embedConsoleStr(wingsLogs.data, 3, 800); //get last 3 lines with max 800 characters
-                            console.log(latestLogs);
+                        if (wingsLogs && wingsLogs.data) {
+                            const last3 = wingsLogs.data.slice(-3);
+                            //make sure its no more than 512 characters
+                            latestLogs = stripAnsi(last3.join('\n'));
+                            if (latestLogs.length > 512) {
+                                latestLogs = latestLogs.slice(-512);
+                            }
                         }
                     }
                 }

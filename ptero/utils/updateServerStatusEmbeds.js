@@ -68,7 +68,7 @@ module.exports = {
                         fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
                     }
 
-                    const embed = await createServerStatusEmbed(msgInfo.serverId, apiKey, msgInfo.iconUrl);
+                    const embed = await createServerStatusEmbed(msgInfo.serverId, apiKey, msgInfo.iconUrl, msgInfo.enableLogs);
                     
                     await message.edit({ embeds: [embed] });
 
