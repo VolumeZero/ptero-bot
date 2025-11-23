@@ -72,8 +72,8 @@ module.exports = {
                     
                     await message.edit({ embeds: [embed] });
 
-                    //sleep for 1 second to avoid rate limits
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    //sleep for 200ms to avoid rate limits
+                    await new Promise(resolve => setTimeout(resolve, 200));
                 } catch (error) {
                     console.error(`Error updating status embed for server ID ${msgInfo.serverId}:`, getErrorMessage(error));
                 }

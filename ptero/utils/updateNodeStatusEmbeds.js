@@ -37,6 +37,8 @@ module.exports = {
                     
                     const embed = await createNodeStatusEmbed(msgInfo.nodeId);
                     await message.edit({ embeds: [embed] });
+                    //sleep for 200ms to avoid rate limits
+                    await new Promise(resolve => setTimeout(resolve, 200));
                 } catch (error) {
                     console.error(`Error updating node status embed for node ID ${msgInfo.nodeId}:`, getAppErrorMessage(error));
                 }
