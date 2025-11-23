@@ -51,7 +51,7 @@ module.exports = {
                 err = true;
             }
             const mappings = server.configuration.allocations.mappings;
-            nodeUsages.allocations += Object.values(mappings).reduce((sum, arr) => sum + arr.length, 0);
+            nodeUsages.allocations += Object.values(mappings).reduce((sum, arr) => sum + arr.length, 0) || 0;
             if (server.state === 'running') {
                 nodeUsages.onlineServers += 1;
             }
