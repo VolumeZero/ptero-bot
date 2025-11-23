@@ -69,7 +69,7 @@ module.exports = {
 
         //cpu usage is 100% for each core so if we have 4 cores and 200% usage that means 50% actual usage
         if (wingsInfo && wingsInfo.cpu_count && wingsInfo.cpu_count > 0) {
-            nodeUsages.cpu = nodeUsages.cpu / wingsInfo.cpu_count;
+            nodeUsages.cpu = nodeUsages.cpu / wingsInfo.cpu_count || 0;
         }
 
         const embed = new EmbedBuilder()
@@ -88,9 +88,8 @@ module.exports = {
                 { name: "Allocations", value: `\`\`\`${nodeUsages.allocations} / ${allocationCount}\`\`\``, inline: true },
                 { name: "Servers Running", value: `\`\`\`${nodeUsages.onlineServers} / ${servers.length}\`\`\``, inline: true },
                 { name: "Wings Version", value: `\`\`\`${wingsInfo ? wingsInfo.version : 'N/A'}\`\`\``, inline: true },
-                { name: "Last Updated", value: `> <t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
             )
-            //.setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>\nNext update in <t:${Math.floor(Date.now() / 1000) + pterodactyl.NODE_STATUS_UPDATE_INTERVAL}:R>`)
+            .setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>\nNext update in <t:${Math.floor(Date.now() / 1000) + pterodactyl.NODE_STATUS_UPDATE_INTERVAL}:R>`)
             .setTimestamp()
             .setFooter({ text: `${pterodactyl.EMBED_FOOTER_TEXT}`, iconURL: `${pterodactyl.EMBED_FOOTER_ICON_URL}` });
 
@@ -144,6 +143,7 @@ module.exports = {
             .setAuthor({ name: `${serverDetails.identifier} - Status: ${serverPowerEmoji(serverPowerState)}` })
             .setTitle(`${serverDetails.name}`)
             .setColor(embedColorFromStatus(serverPowerState))
+            .setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>`)
             .addFields(
                 { name: "Address", value: `\`\`\`${ip}:${port}\`\`\``, inline: false },
                 { name: "CPU Usage", value: `\`\`\`${serverResourceUsage.resources.cpu_absolute.toFixed(2)}% / ${serverDetails.limits.cpu}%\`\`\``, inline: true },
@@ -164,12 +164,6 @@ module.exports = {
         if (extras && extras.version !== undefined) {
             embed.addFields(
                 { name: "Version", value: `\`\`\`${extras.version}\`\`\``, inline: true,  },
-            );
-        }
-        //only need to show uptime if update interval is less than 60 seconds since timestamps show down to the minute
-        if (pterodactyl.SERVER_STATUS_UPDATE_INTERVAL < 60) {
-            embed.addFields(
-                { name: `Last updated`, value: `> <t:${Math.floor(Date.now() / 1000)}:R>`, inline: false },
             );
         }
         if (latestLogs && pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs) {
