@@ -4,7 +4,6 @@ const { getAppErrorMessage } = require("../utils/appErrors");
 
 module.exports = {
     updateNodeStatusEmbeds: async function (client, seconds) {
-        console.log("Watching node status embeds to update every " + seconds + " seconds...");
         const updateEmbeds = async () => {
             let dataDir = "./ptero/data";
             if (!fs.existsSync(dataDir)){
@@ -44,7 +43,7 @@ module.exports = {
                 }
             }
         };
-
+        console.log("⌛ Watching node status embeds to update every " + seconds + " seconds...");
         // Run once immediately
         updateEmbeds();
         // Then run at the specified interval

@@ -5,7 +5,6 @@ const { createServerStatusEmbed } = require('./embeds');
 
 module.exports = {
     updateServerStatusEmbeds: async function (client, seconds) {
-        console.log("Watching server status embeds to update every " + seconds + " seconds...");
 
         const updateEmbeds = async () => {
             let dataDir = "./ptero/data";
@@ -82,7 +81,7 @@ module.exports = {
 
         // Run once immediately
         updateEmbeds();
-
+        console.log("⌛ Watching server status embeds to update every " + seconds + " seconds...");
         // Then continue interval
         setInterval(updateEmbeds, seconds * 1000);
     }
