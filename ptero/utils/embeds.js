@@ -126,8 +126,8 @@ module.exports = {
                         });
                         if (wingsLogs?.data) {
                             latestLogs = wingsLogs.data
-                                .map(line => stripAnsi(line.replace(/^\[\s*.*?\]\s*/, '').trimStart()))
-                                .join('\n'); // preserve newlines
+                                .map(line => stripAnsi(line).replace(/.*?\[[^\]]*]\s*/, ''))
+                                .join('\n');
 
                             // Trim to 512 characters if needed
                             if (latestLogs.length > 512) {
@@ -172,6 +172,9 @@ module.exports = {
             embed.addFields(
                 { name: "Latest Logs", value: `\`\`\`${latestLogs}\`\`\``, inline: false },
             );
+        }
+        if (extras && extras.joinLink !== undefined) {
+            embed.setURL(extras.joinLink);
         }
         return embed;
     }

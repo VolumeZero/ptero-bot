@@ -46,7 +46,8 @@ module.exports = {
                 extras = {
                     players: response.data.vars.Players, //query players.json for more player info if needed
                     maxPlayers: response.data.vars.sv_maxClients,
-                    version: response.data.server.match(/v[\d.]+/)[0]
+                    version: response.data.server.match(/v[\d.]+/)[0],
+                    joinLink: `http://${ip}:${port}`
                 };
                 return extras; //end here if we found fivem info since there would be no point in checking further
             }
