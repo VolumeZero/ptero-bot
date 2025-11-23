@@ -7,6 +7,7 @@ const { updateNodeStatusEmbeds } = require("../ptero/utils/updateNodeStatusEmbed
 const { pterodactyl } = require("../config.json");
 const { updatePresence } = require("../utils/updatePresence");
 const { isApplicationKeyValid } = require("../ptero/utils/serverUtils");
+const Nodeactyl = require("nodeactyl");
 
 module.exports = {
     
@@ -22,6 +23,7 @@ module.exports = {
             if (appKeyVaild) {
                 updateNodeStatusEmbeds(client, pterodactyl.NODE_STATUS_UPDATE_INTERVAL);
                 console.log(`✅ Sucessfully authenticated with the pterodactyl application API for ${pterodactyl.company}.`);
+                client.pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, pterodactyl.apiKey);
             } else {
                 console.warn("⚠️ The pterodactyl API key is invalid. Node status embeds will not be updated. Server status logs will also not function.");
             }
