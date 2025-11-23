@@ -39,7 +39,7 @@ async function sendServerStatusEmbed(interaction, serverId, iconUrl, enableLogs)
     //remove existing embed message from channel if it exists
     if (existingEmbed) {
         try {
-            console.log("Deleting existing status message...");
+            console.log("Deleting existing status message for server:", serverId);
             const channel = await interaction.client.channels.fetch(existingEmbed.channelId);
             const message = await channel.messages.fetch(existingEmbed.messageId);
             await message.delete();

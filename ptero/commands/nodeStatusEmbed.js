@@ -31,7 +31,7 @@ module.exports = {
         const existingEmbed = statusMessages.find(msg => msg.nodeId === nodeId);
         if (existingEmbed) {
             try {
-                console.log("Deleting existing node status message...");
+                console.log("Deleting existing node status message for node:", nodeId);
                 const channel = await interaction.client.channels.fetch(existingEmbed.channelId);
                 const message = await channel.messages.fetch(existingEmbed.messageId);
                 await message.delete().catch((error) => {
