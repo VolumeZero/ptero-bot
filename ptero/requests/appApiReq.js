@@ -14,7 +14,9 @@ async function pteroAppReq(apiEndpoint, params) {
         });
         return response.data;
     } catch (error) {
-        console.error(`Error making application request to ${apiEndpoint}:`, error.response ? error.response.data : error.message);
+        if (pterodactyl.ERROR_LOGGING_ENABLED) {
+            console.error(`Error making application request to \'/api/application/${apiEndpoint}\':`, error.response ? error.response.data : error.message);
+        }
         throw error;
     }
 }
