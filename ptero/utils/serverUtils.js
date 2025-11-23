@@ -19,21 +19,21 @@ function uptimeToString(uptimeMs) {
     const hours = Math.floor((totalSeconds % 86400) / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
-    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
 
 function formatBytes(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes === 0) return '0 Byte';
+    if (bytes === 0) return '0 Byte';
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+    return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 }
 
 function formatMegabytes(megabytes) { 
     const sizes = ['MB', 'GB', 'TB'];
-    if (megabytes === 0) return '0 MB';
+    if (megabytes === 0) return '∞';
     const i = Math.floor(Math.log(megabytes) / Math.log(1024));
-    return `${(megabytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+    return `${(megabytes / Math.pow(1024, i)).toFixed(0)} ${sizes[i]}`;
 }
 
 function stripAnsi(str) {

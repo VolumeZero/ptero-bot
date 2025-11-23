@@ -103,7 +103,7 @@ Supports:
      API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
      MANAGER_EMBED_UPDATE_INTERVAL: Seconds between resource usage updates in the server manager (uses websockets so discord rate limits are the main concern here)
      SERVER_STATUS_UPDATE_INTERVAL: Seconds between server status embed updates
-     ENABLE_SERVER_STATUS_CONSOLE_LOGS: Enable or disable console logs in server status embeds (requires an apiKey with server.read permissions to access wings api)
+     ENABLE_SERVER_STATUS_CONSOLE_LOGS: Globally toggle console logs on server status embeds (requires an apiKey with server.read permissions to access wings api)
      NODE_STATUS_UPDATE_INTERVAL: Seconds between node status embed updates
   ```
 
@@ -128,7 +128,10 @@ Supports:
     - Only the bot owner can use this command to avoid spam or misuse.
     - Only one status embed per server or node is allowed to avoid spam.
     - Nodes require an application API key set in the config.
-    - Server status embeds only require a user-specific API key assigned with the ```/pt key``` command. This means you can create server status embeds for your servers even if you are not the owner of the pterodactyl panel.  
+    - Server status embeds only require a user-specific API key assigned with the ```/pt key``` command. This means you can create server status embeds for your servers even if you are not the owner of the pterodactyl panel.
+    - Server status embeds have two optional parameters:
+      - server-icon-url: Include a server icon in the embed if available but leaves less room for other info.
+      - console-logs: Shows recent console logs in the embed (requires an application API key with server.read permissions set in the config).  
 
 
 ## 📋 Config Notes
