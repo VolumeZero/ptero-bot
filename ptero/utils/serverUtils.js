@@ -33,7 +33,12 @@ function formatMegabytes(megabytes) {
     const sizes = ['MB', 'GB', 'TB'];
     if (megabytes === 0) return '∞';
     const i = Math.floor(Math.log(megabytes) / Math.log(1024));
-    return `${(megabytes / Math.pow(1024, i)).toFixed(0)} ${sizes[i]}`;
+    //if in tb range show two decimal places otherwise show no decimal places
+    if (i >= 2) {
+        return `${(megabytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+    } else {
+        return `${Math.round(megabytes / Math.pow(1024, i))} ${sizes[i]}`;
+    }
 }
 
 function stripAnsi(str) {
