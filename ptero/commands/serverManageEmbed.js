@@ -92,10 +92,10 @@ async function serverManageEmbed(interaction, serverId) {
                 { name: "Address", value: `\`\`\`${defaultAllocation.attributes.ip_alias}:${defaultAllocation.attributes.port}\`\`\``, inline: false },
 
                 { name: "Status", value: `\`\`\`${serverPowerEmoji(serverPowerState)}\`\`\`` ?? "N/A", inline: true },
-                { name: "CPU Usage", value: `\`\`\`${serverResourceUsage.resources.cpu_absolute.toFixed(2)}% / ${serverDetails.limits.cpu}%\`\`\``, inline: true },
-                { name: "Memory Usage", value: `\`\`\`${formatBytes(serverResourceUsage.resources.memory_bytes)} / ${formatMegabytes(serverDetails.limits.memory)}\`\`\``, inline: true },
+                { name: "CPU Usage", value: `\`\`\`${serverResourceUsage.resources.cpu_absolute.toFixed(2)}% / ${serverDetails.limits.cpu}%\`\`\``, inline: true },
+                { name: "Memory Usage", value: `\`\`\`${formatBytes(serverResourceUsage.resources.memory_bytes)} / ${formatMegabytes(serverDetails.limits.memory)}\`\`\``, inline: true },
 
-                { name: "Disk Usage", value: `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``, inline: true },
+                { name: "Disk Usage", value: `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``, inline: true },
                 { name: "Uptime", value: `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``, inline: true },
                 //last three lines of logs
                 { name: "Console", value: logBuffer.length === 0 ? "Loading..." : `\`\`\`\n${embedConsoleStr(logBuffer, 3, 1024)}\n\`\`\``, inline: false }, //limit to last 3 lines or 1024 characters (discord embed limit)
@@ -198,7 +198,7 @@ async function serverManageEmbed(interaction, serverId) {
                 if (buttonInteraction.customId === logsButtonId) {
                     const now = Date.now();
                     if (cooldowns.has(buttonInteraction.user.id) && now < cooldowns.get(buttonInteraction.user.id)) {
-                        const remaining = Math.ceil((cooldowns.get(buttonInteraction.user.id) - now) / 1000);
+                        const remaining = Math.ceil((cooldowns.get(buttonInteraction.user.id) - now)/1000);
                         return await buttonInteraction.reply({
                             content: `Please wait ${remaining}s before requesting logs again.`,
                             ephemeral: true
@@ -355,9 +355,9 @@ function updateEmbedField(embed, fieldName, newValue) {
 
 async function updateAllEmbedFields(embed, serverDetails, serverResourceUsage, logBuffer) {
     updateEmbedField(embed, "Status", `\`\`\`${serverPowerEmoji(serverResourceUsage.current_state)}\`\`\`` ?? "N/A");
-    updateEmbedField(embed, "CPU Usage", `\`\`\`${serverResourceUsage.resources.cpu_absolute.toFixed(2)}% / ${serverDetails.limits.cpu}%\`\`\``);
-    updateEmbedField(embed, "Memory Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.memory_bytes)} / ${formatMegabytes(serverDetails.limits.memory)}\`\`\``);
-    updateEmbedField(embed, "Disk Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``);
+    updateEmbedField(embed, "CPU Usage", `\`\`\`${serverResourceUsage.resources.cpu_absolute.toFixed(2)}% / ${serverDetails.limits.cpu}%\`\`\``);
+    updateEmbedField(embed, "Memory Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.memory_bytes)} / ${formatMegabytes(serverDetails.limits.memory)}\`\`\``);
+    updateEmbedField(embed, "Disk Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``);
     updateEmbedField(embed, "Uptime", `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``);
     //add recent logs
     updateEmbedField(embed, "Console", logBuffer.length === 0 ? "N/A" : `\`\`\`\n${embedConsoleStr(logBuffer)}\n\`\`\``);
