@@ -6,7 +6,6 @@ const { updateServerStatusEmbeds } = require("../ptero/utils/updateServerStatusE
 const { updateNodeStatusEmbeds } = require("../ptero/utils/updateNodeStatusEmbeds");
 const { pterodactyl } = require("../config.json");
 const { updatePresence } = require("../utils/updatePresence");
-const { getAppErrorMessage } = require("../ptero/utils/appErrors");
 const { isApplicationKeyValid } = require("../ptero/utils/serverUtils");
 
 module.exports = {
