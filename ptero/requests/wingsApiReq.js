@@ -7,7 +7,7 @@ module.exports = {
             const url = `${nodeDetails.scheme}://${nodeDetails.fqdn}:${nodeDetails.daemon_listen}/api/${apiEndpoint}`;
             const headers = {
                 'Authorization': `Bearer ${nodeToken}`,
-                'Accept': '*/*',
+                'Accept': 'Application/vnd.pterodactyl.v1+json',
                 'Content-Type': 'application/json'
             };  
             const options = {

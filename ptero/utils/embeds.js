@@ -1,7 +1,7 @@
 const Nodeactyl = require("nodeactyl");
 const { EmbedBuilder } = require("discord.js");
 const { pterodactyl } = require("../../config.json");
-const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, checkWings, embedColorFromWingsStatus, embedConsoleStr, stripAnsi } = require("./serverUtils");
+const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, embedColorFromWingsStatus, stripAnsi } = require("./serverUtils");
 const { getServerExtras } = require("./getServerExtras");
 const { getAppErrorMessage } = require("./appErrors");
 const { wingsApiReq } = require("../requests/wingsApiReq");
@@ -23,7 +23,7 @@ module.exports = {
         const nodeAllocations = await pteroApp.getNodeAllocations(nodeId);
         const allocationCount = nodeAllocations.data.length;
         
-        //filter servers to only those on this node using wings api
+        //get server details from wings api since it provides the most info about servers (including logs even when the server is offline)
         const servers = await wingsApiReq(nodeDetails, nodeConfig.token, 'servers').catch((error) => {
             console.error(`Error fetching servers for node ID ${nodeId}:`, getAppErrorMessage(error));
             throw new Error(`Failed to fetch servers for node: ${error}`);
@@ -60,7 +60,10 @@ module.exports = {
             console.warn(`Warning: One or more server usages could not be fetched for node ${nodeId}. The node usages may be incomplete or inaccurate. You can safely ignore this message if you wish to continue using partial data for the node embed.`);
         }
 
-        const wingsInfo = await checkWings(nodeDetails, nodeConfig.token); //contains {architecture: 'amd64',cpu_count: 4,kernel_version: '6.8.0-87-generic',os: 'linux',version: 'develop'}
+        const wingsInfo = await wingsApiReq(nodeDetails, nodeConfig.token, 'system').catch((error) => {
+            console.error(`Error fetching wings system info for node ID ${nodeId}:`, getAppErrorMessage(error));
+            return null; //treat as offline
+        });
         const nodeStatus = wingsInfo ? "online" : "offline";
         const statusIcon = nodeStatus === "online" ? "🟢 Online" : "🔴 Offline";
 
@@ -85,8 +88,9 @@ module.exports = {
                 { name: "Allocations", value: `\`\`\`${nodeUsages.allocations} / ${allocationCount}\`\`\``, inline: true },
                 { name: "Servers Running", value: `\`\`\`${nodeUsages.onlineServers} / ${servers.length}\`\`\``, inline: true },
                 { name: "Wings Version", value: `\`\`\`${wingsInfo ? wingsInfo.version : 'N/A'}\`\`\``, inline: true },
+                { name: "Last Updated", value: `> <t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
             )
-            .setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>\nNext update in <t:${Math.floor(Date.now() / 1000) + pterodactyl.NODE_STATUS_UPDATE_INTERVAL}:R>`)
+            //.setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>\nNext update in <t:${Math.floor(Date.now() / 1000) + pterodactyl.NODE_STATUS_UPDATE_INTERVAL}:R>`)
             .setTimestamp()
             .setFooter({ text: `${pterodactyl.EMBED_FOOTER_TEXT}`, iconURL: `${pterodactyl.EMBED_FOOTER_ICON_URL}` });
 
@@ -140,7 +144,6 @@ module.exports = {
             .setAuthor({ name: `${serverDetails.identifier} - Status: ${serverPowerEmoji(serverPowerState)}` })
             .setTitle(`${serverDetails.name}`)
             .setColor(embedColorFromStatus(serverPowerState))
-            .setDescription(`Last updated <t:${Math.floor(Date.now() / 1000)}:R>`)
             .addFields(
                 { name: "Address", value: `\`\`\`${ip}:${port}\`\`\``, inline: false },
                 { name: "CPU Usage", value: `\`\`\`${serverResourceUsage.resources.cpu_absolute.toFixed(2)}% / ${serverDetails.limits.cpu}%\`\`\``, inline: true },
@@ -161,6 +164,12 @@ module.exports = {
         if (extras && extras.version !== undefined) {
             embed.addFields(
                 { name: "Version", value: `\`\`\`${extras.version}\`\`\``, inline: true,  },
+            );
+        }
+        //only need to show uptime if update interval is less than 60 seconds since timestamps show down to the minute
+        if (pterodactyl.SERVER_STATUS_UPDATE_INTERVAL < 60) {
+            embed.addFields(
+                { name: `Last updated`, value: `> <t:${Math.floor(Date.now() / 1000)}:R>`, inline: false },
             );
         }
         if (latestLogs && pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs) {

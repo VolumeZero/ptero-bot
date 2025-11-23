@@ -62,26 +62,6 @@ function embedColorFromStatus(status) {
     }
 }
 
-async function checkWings(nodeDetails, token) {
-    try {
-        const res = await axios.get(`${nodeDetails.scheme}://${nodeDetails.fqdn}:${nodeDetails.daemon_listen}/api/system`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': '*/*',
-            },
-            timeout: 5000,
-        });
-        if (res.status === 200) {
-            return res.data;
-        } else {
-            return false;
-        }
-    } catch (error) {
-        console.log(`Node ${nodeDetails.name} is offline or unreachable. Error: ${error.message}`);
-        return false;
-    }
-}
-
 function embedColorFromWingsStatus(isOnline) {
     return isOnline ? 0x00FF00 : 0xFF0000; // Green if online, Red if offline
 }
@@ -126,7 +106,6 @@ module.exports = {
     stripAnsi,
     embedColorFromStatus,
     embedColorFromWingsStatus,
-    checkWings,
     embedConsoleStr,
     isApplicationKeyValid,
 };
