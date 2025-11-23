@@ -27,7 +27,8 @@ module.exports = {
             } else {
                 console.warn("⚠️ The pterodactyl API key is invalid. Node status embeds will not be updated. Server status logs will also not function.");
             }
-            updatePresence(client);
+            updatePresence(client); 
+            setInterval(() => updatePresence(client), 10 * 60 * 1000); // Update presence every 15 minutes
 
             console.log(`✅ Ready and logged in as ${client.user.tag}`);
         } catch (error) {

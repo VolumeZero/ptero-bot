@@ -6,14 +6,10 @@ const { isApplicationKeyValid } = require("../ptero/utils/serverUtils");
 const fs = require("fs");
 
 async function updatePresence(client) {
-
     try {
         const appKeyVaild = await isApplicationKeyValid(pterodactyl.apiKey);
         if (appKeyVaild) {
-            const pteroApp = new Nodeactyl.NodeactylApplication(
-                pterodactyl.domain,
-                pterodactyl.apiKey
-            );
+            const pteroApp = client.pteroApp
             const servers = await pteroApp.getAllServers();
             const totalServers = servers.data.length || `0`;
             await client.user.setActivity(`${totalServers} servers on ${pterodactyl.company}`, {
@@ -42,9 +38,6 @@ async function updatePresence(client) {
             //console.log(`Set presence to watch ${totalEmbeds} servers on ${pterodactyl.company}.`);
         }
 
-        setInterval(async () => {
-            await updatePresence(client);
-        }, 5 * 60 * 1000); // Update every 5 minutes
     } catch (error) {
         console.error("Error updating presence:", getAppErrorMessage(error));
     }
