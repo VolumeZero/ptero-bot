@@ -39,6 +39,8 @@ The bot includes a basic server management interface using Discord buttons and e
 - Power state icon and embed color
 - CPU, RAM, storage, and uptime
 - Api powered updates
+- Optional server icon
+- Optional recent console logs (requires application api key with server.read permissions set in config)
 - Only bot owners may create server status embeds to avoid spam
 
 
