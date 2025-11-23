@@ -67,8 +67,15 @@ function embedColorFromStatus(status) {
     }
 }
 
-function embedColorFromWingsStatus(isOnline) {
-    return isOnline ? 0x00FF00 : 0xFF0000; // Green if online, Red if offline
+function embedColorFromWingsStatus(status) {
+    switch (status) {
+        case "online": return 0x00FF00; // Green
+        case "offline": return 0xFF0000; // Red
+        case "starting": return 0xFFFF00; // Yellow
+        case "stopping": return 0xFFA500; // Orange
+        case "installing": return 0x0000FF; // Blue
+        default: return 0x808080; // Grey
+    }
 }
 
 function embedConsoleStr(logBuffer, lineCount = 3, maxLength = 1024) {

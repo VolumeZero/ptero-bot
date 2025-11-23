@@ -5,6 +5,7 @@ const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedCol
 const { getServerExtras } = require("./getServerExtras");
 const { getAppErrorMessage } = require("./appErrors");
 const { wingsApiReq } = require("../requests/wingsApiReq");
+const { getErrorMessage } = require("./clientErrors");
 
 module.exports = {
     async createNodeStatusEmbed(nodeId) {
@@ -23,10 +24,13 @@ module.exports = {
         const allocationCount = nodeAllocations.data.length;
         
         //get server details from wings api since it provides the most info about servers (including logs even when the server is offline)
-        const servers = await wingsApiReq(nodeDetails, nodeConfig.token, 'servers').catch((error) => {
-            console.error(`Error fetching servers for node ID ${nodeId}:`, getAppErrorMessage(error));
-            throw new Error(`Failed to fetch servers for node: ${error}`);
-        });
+        let servers = [];
+        try {
+            servers = await wingsApiReq(nodeDetails, nodeConfig.token, 'servers');
+        } catch (error) {
+            console.warn(`Could not fetch servers from Wings for node ID ${nodeId} :`, getAppErrorMessage(error));
+            // Continue with empty servers array
+        }
 
         const nodeUsages = { 
             cpu: 0, 
@@ -49,8 +53,10 @@ module.exports = {
             } else {
                 err = true;
             }
-            const mappings = server.configuration.allocations.mappings;
-            nodeUsages.allocations += Object.values(mappings).reduce((sum, arr) => sum + arr.length, 0) || 0;
+            const mappings = server.configuration?.allocations?.mappings;
+            if (mappings) {
+                nodeUsages.allocations += Object.values(mappings).reduce((sum, arr) => sum + arr.length, 0) || 0;
+            }
             if (server.state === 'running') {
                 nodeUsages.onlineServers += 1;
             }
@@ -60,7 +66,9 @@ module.exports = {
         }
 
         const wingsInfo = await wingsApiReq(nodeDetails, nodeConfig.token, 'system').catch((error) => {
-            console.error(`Error fetching wings system info for node ID ${nodeId}:`, getAppErrorMessage(error));
+            if (pterodactyl.ERROR_LOGGING_ENABLED) {
+                console.error(`Error fetching wings system info for node ID ${nodeId}:`, getAppErrorMessage(error));
+            }
             return null; //treat as offline
         });
         const nodeStatus = wingsInfo ? "online" : "offline";
@@ -71,13 +79,16 @@ module.exports = {
             nodeUsages.cpu = nodeUsages.cpu / wingsInfo.cpu_count || 0;
         }
 
+        const cpuCount = wingsInfo?.cpu_count || 'N/A';
+        const cpuLabel = cpuCount !== 'N/A' ? `CPU Usage (${cpuCount}c)` : 'CPU Usage';
+
         const embed = new EmbedBuilder()
             .setAuthor({ name: `Node ID: ${nodeDetails.id} - Status: ${statusIcon}` })
             .setTitle(`${nodeDetails.name}`)
             .setColor(embedColorFromWingsStatus(nodeStatus))
             .addFields(
                 { name: "FQDN", value: `\`\`\`${nodeDetails.fqdn}\`\`\``, inline: false },
-                { name: `CPU Usage (${wingsInfo.cpu_count}c)`, value: `\`\`\`${nodeUsages.cpu.toFixed(2)}%\`\`\``, inline: true },
+                { name: cpuLabel, value: `\`\`\`${nodeUsages.cpu.toFixed(2)}%\`\`\``, inline: true },
                 { name: "Memory Usage", value: `\`\`\`${formatBytes(nodeUsages.memory)} / ${formatMegabytes(nodeDetails.memory)}\`\`\``, inline: true },
                 { name: "Disk Usage", value: `\`\`\`${formatBytes(nodeUsages.disk)} / ${formatMegabytes(nodeDetails.disk)}\`\`\``, inline: true },
                 { name: "Network ↑", value: `\`\`\`${formatBytes(nodeUsages.network_tx)}\`\`\``, inline: true },
@@ -98,8 +109,27 @@ module.exports = {
     async createServerStatusEmbed(serverId, clientApiKey, iconUrl, enableLogs) {
         const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
         const serverDetails = await pteroClient.getServerDetails(serverId);
-        const serverResourceUsage = await pteroClient.getServerUsages(serverId);
-        const serverPowerState = serverResourceUsage.current_state;
+        
+        let serverResourceUsage = null;
+        let serverPowerState = "offline";
+        
+        try {
+            serverResourceUsage = await pteroClient.getServerUsages(serverId);
+            serverPowerState = serverResourceUsage.current_state;
+        } catch (error) {
+            console.warn(`Could not fetch server usage for ${serverId} :`,  getErrorMessage(error));
+            // Set default offline values
+            serverResourceUsage = {
+                current_state: "offline",
+                resources: {
+                    cpu_absolute: 0,
+                    memory_bytes: 0,
+                    disk_bytes: 0,
+                    uptime: 0
+                }
+            };
+        }
+        
         const defaultAllocation = serverDetails.relationships.allocations.data.find(alloc => alloc.attributes.is_default);
         const ip = defaultAllocation.attributes.ip_alias || defaultAllocation.attributes.ip;
         const port = defaultAllocation.attributes.port;

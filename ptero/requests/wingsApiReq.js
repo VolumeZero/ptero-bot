@@ -19,7 +19,9 @@ module.exports = {
             const response = await axios(options);
             return response.data;
         } catch (error) {
-            console.error(`Error making Wings API request to ${apiEndpoint} on node ${nodeDetails.name}:`, error.response ? error.response.data : error.message);
+            if (pterodactyl.ERROR_LOGGING_ENABLED) {
+                console.error(`Error making Wings API request to ${apiEndpoint} on node ${nodeDetails.name}:`, error.response ? error.response.data : error.message);
+            }
             throw error;
         }
     }
