@@ -1,5 +1,3 @@
-const { default: axios } = require("axios");
-const Nodeactyl = require("nodeactyl");
 const { pterodactyl } = require("../../config.json");
 const { pteroClientReq } = require("../requests/clientApiReq");
 const { pteroAppReq } = require("../requests/appApiReq");
