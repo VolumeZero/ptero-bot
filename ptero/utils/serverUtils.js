@@ -1,6 +1,8 @@
 const { default: axios } = require("axios");
 const Nodeactyl = require("nodeactyl");
 const { pterodactyl } = require("../../config.json");
+const { pteroClientReq } = require("../requests/clientApiReq");
+const { pteroAppReq } = require("../requests/appApiReq");
 
 // Helper functions
 function serverPowerEmoji(status) {
@@ -90,17 +92,35 @@ function embedConsoleStr(logBuffer, lineCount = 3, maxLength = 1024) {
     return output;
 }
 
-
-function isApplicationKeyValid(key) {
+async function isClientKeyValid(apiKey) {
     try {
-        const application = new Nodeactyl.NodeactylApplication(pterodactyl.domain, key);
-        if (application) {
-            return true;
-        } 
+        if (!apiKey || apiKey.trim() === '') {
+            return false;
+        } else if (apiKey === pterodactyl.apiKey) {
+            return false;
+        } else if (apiKey.startsWith('ptla_')) {
+            return false;
+        }
+        await pteroClientReq('account', apiKey);
+        return true;
     } catch (error) {
         return false;
     }
-    return false;
+}
+
+async function isApplicationKeyValid() {
+    const apiKey = pterodactyl.apiKey;
+    try {
+        if (!apiKey || apiKey.trim() === '') {
+            return false;
+        } else if (apiKey.startsWith('ptlc_')) { //client key prefix
+            return false;
+        }
+        await pteroAppReq('nodes');
+        return true;
+    } catch (error) {
+        return false;
+    }
 }
 
 module.exports = {
@@ -112,5 +132,6 @@ module.exports = {
     embedColorFromStatus,
     embedColorFromWingsStatus,
     embedConsoleStr,
-    isApplicationKeyValid,
+    isClientKeyValid,
+    isApplicationKeyValid
 };
