@@ -1,14 +1,13 @@
 const Nodeactyl = require("nodeactyl");
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, ButtonBuilder, ActionRowBuilder } = require("discord.js");
 const { pterodactyl } = require("../../config.json");
-const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, embedColorFromWingsStatus, stripAnsi } = require("./serverUtils");
+const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, embedColorFromWingsStatus, stripAnsi, isApplicationKeyValid } = require("./serverUtils");
 const { getServerExtras } = require("./getServerExtras");
 const { getAppErrorMessage } = require("./appErrors");
 const { wingsApiReq } = require("../requests/wingsApiReq");
 
 module.exports = {
     async createNodeStatusEmbed(nodeId) {
-        //defer 
         const appApiKey = pterodactyl.apiKey;
         const pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, appApiKey);
 
@@ -107,13 +106,11 @@ module.exports = {
         const extras = await getServerExtras(ip, port);
         let latestLogs = null;
 
-
-        if (pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs) {
+        const isAppKeyValid = await isApplicationKeyValid(pterodactyl.apiKey);
+        if (pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs && isAppKeyValid) {
             //try and get the logs using an api request to wings (need an appliction api key with server.read permission) This will be optional so users without an api key can still use the bot
             const pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, pterodactyl.apiKey);
-            const nodes = await pteroApp.getAllNodes().catch((error) => { //do nothing since this is an optional feature
-                //console.warn(`Error fetching all nodes:`, getAppErrorMessage(error)); 
-            });
+            const nodes = await pteroApp.getAllNodes();
             if (nodes !== undefined && nodes.data !== undefined) { 
                 const node = nodes.data.find(n => n.attributes.fqdn === ip);
                 if (node) {
@@ -177,7 +174,55 @@ module.exports = {
             embed.setURL(extras.joinLink);
         }
         return embed;
+    },
+
+
+    async createAccountDetailsEmbed(userId, clientApiKey) {
+        try {
+            const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
+            const userInfo = await pteroClient.getAccountDetails();
+            const servers = await pteroClient.getAllServers();
+            let totalAllocatedResources = {
+                memory: 0,
+                disk: 0,
+                cpu: 0
+            };
+            for (const server of servers.data) {
+                totalAllocatedResources.memory += server.attributes.limits.memory || 0;
+                totalAllocatedResources.disk += server.attributes.limits.disk || 0;
+                totalAllocatedResources.cpu += server.attributes.limits.cpu || 0;
+            }
+
+            const panelButton = new ButtonBuilder()
+                .setLabel('Open Panel')
+                .setStyle('Link')
+                .setURL(`${pterodactyl.domain}`);
+            const actionRow = new ActionRowBuilder().addComponents(panelButton);
+
+            const embed = new EmbedBuilder()
+                .setAuthor({ name: `Account ID: ${userId}` })
+                .setTitle(`${userInfo.username}'s Account Details`)
+                .setColor(0x00AE86)
+                .addFields(
+                    { name: "Username", value: `\`\`\`${userInfo.username}\`\`\``, inline: true },
+                    { name: "Name", value: `||\`\`\`${userInfo.first_name || 'N/A'}\`\`\`||`, inline: true },
+                    { name: "Email", value: `||\`\`\`${userInfo.email}\`\`\`||`, inline: false },
+                    { name: "Total Allocated CPU", value: `\`\`\`${totalAllocatedResources.cpu}%\`\`\``, inline: true },
+                    { name: "Total Allocated Memory", value: `\`\`\`${formatMegabytes(totalAllocatedResources.memory)}\`\`\``, inline: true },
+                    { name: "Total Allocated Disk", value: `\`\`\`${formatMegabytes(totalAllocatedResources.disk)}\`\`\``, inline: true },
+                    { name: "Total Servers", value: `\`\`\`${servers.data.length}\`\`\``, inline: true },
+                    { name: "Admin", value: `\`\`\`${userInfo.admin ? 'Yes' : 'No'}\`\`\``, inline: true },
+                )
+                .setTimestamp()
+                .setFooter({ text: `${pterodactyl.EMBED_FOOTER_TEXT}`, iconURL: `${pterodactyl.EMBED_FOOTER_ICON_URL}` });  
+            return { embed, components: [actionRow]  };
+
+        } catch (error) {
+            console.error(`Error creating account details embed for user ID ${userId}:`, getAppErrorMessage(error));
+            throw new Error(`Failed to create account details embed: ${error}`);
+        }
     }
+
 
 
 };

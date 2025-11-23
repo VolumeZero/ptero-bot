@@ -4,6 +4,7 @@ const { saveApiKey, loadApiKey } = require("../../../ptero/keys");
 const { serverManageEmbed } = require("../../../ptero/commands/serverManageEmbed");
 const { sendServerStatusEmbed } = require("../../../ptero/commands/serverStatusEmbed");
 const { sendNodeStatusEmbed } = require("../../../ptero/commands/nodeStatusEmbed");
+const { isClientKeyValid, isApplicationKeyValid } = require("../../../ptero/utils/serverUtils");
 const { pterodactyl } = require("../../../config.json");
 
 module.exports = {
@@ -14,6 +15,11 @@ module.exports = {
             sub
                 .setName("list")
                 .setDescription("List all servers associated with your Pterodactyl account.")
+        )
+        .addSubcommand(sub =>
+            sub
+                .setName("account")
+                .setDescription("View your Pterodactyl account details.")
         )
         .addSubcommand(sub =>
             sub
@@ -100,6 +106,27 @@ module.exports = {
 
         } else if (subcommand === "key") {
             const apiKey = interaction.options.getString("api_key");
+            interaction.deferReply({ ephemeral: true });
+            const isKeyValid = await isClientKeyValid(apiKey);
+            if (!isKeyValid) {
+                if (apiKey === pterodactyl.apiKey) {
+                    return interaction.reply({
+                        content: `You cannot use the bot's API key as your personal key. Please generate your own API key from your Pterodactyl account at ${pterodactyl.domain}/account/api.`,
+                        ephemeral: true,
+                    });
+                } else if (apiKey.startsWith('ptla_')) {
+                    return interaction.reply({
+                        content: "Application API keys are not supported. Please use a client API key generated from your Pterodactyl account.",
+                        ephemeral: true,
+                    });
+                }
+
+                return interaction.reply({
+                    content: "The provided API key is invalid. Please double-check and try again.",
+                    ephemeral: true,
+                });
+            }
+
             await saveApiKey(interaction.user.id, apiKey);
             return interaction.reply({
                 content: "Your API key has been saved!",
@@ -113,7 +140,12 @@ module.exports = {
     	    		content: "You have not set your API key yet. Please use `/pt key` to set it.",
     	    		ephemeral: true,
     	    	});
-    	    }
+    	    } else if (!await isClientKeyValid(clientApiKey)) {
+                return interaction.reply({
+                    content: "Your saved API key is no longer valid. Please update it using `/pt key`.",
+                    ephemeral: true,
+                });
+            }
 
             try {
                 await serverManageEmbed(interaction, serverId);
@@ -169,6 +201,13 @@ module.exports = {
                     ephemeral: true,
                 });
             }
+            const appKeyVaild = await isApplicationKeyValid(pterodactyl.apiKey);
+            if (!appKeyVaild) {
+                return interaction.reply({
+                    content: "The bot's application API key is invalid.",
+                    ephemeral: true,
+                });
+            }
 
             try {
                 await sendNodeStatusEmbed(interaction, nodeId); //will be bot owner only and use application api
@@ -176,6 +215,30 @@ module.exports = {
                 console.error("Error in node-embed command:", error);
                 return interaction.followUp({
                     content: "An unexpected error occurred while trying to send the node embed.",
+                    ephemeral: true,
+                });
+            }
+
+        } else if (subcommand === "account") {
+            if (!clientApiKey) {
+    	        return interaction.reply({
+    	        	content: "You have not set your API key yet. Please use `/pt key` to set it.",
+    	        	ephemeral: true,
+    	        });
+    	    } 
+
+            try {
+                const { createAccountDetailsEmbed } = require("../../../ptero/utils/embeds");
+                const accountEmbedData = await createAccountDetailsEmbed(interaction.user.id, clientApiKey);
+                return interaction.reply({
+                    embeds: [accountEmbedData.embed],
+                    components: accountEmbedData.components,
+                    ephemeral: true,
+                });
+            } catch (error) {
+                console.error("Error in account command:", error);
+                return interaction.reply({
+                    content: "An unexpected error occurred while fetching your account details.",
                     ephemeral: true,
                 });
             }
