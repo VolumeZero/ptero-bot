@@ -4,57 +4,42 @@ const axios = require('axios');
 
 module.exports = {
     async getServerExtras(ip, port) {
-        let extras = {};
-        //try getting minecraft server status
-        try {
+        const timeout = 3000;
 
-            let minecraftPlayers = null;
-            let maxPlayers = null;
-            let minecraftVersion = null;
-            const mcStatus = await mcs.statusJava(ip, port, { timeout: 5000 });
+        const mcJavaCheck = mcs.statusJava(ip, port, { timeout })
+            .then(status => status?.players ? {
+                players: status.players.online,
+                maxPlayers: status.players.max,
+                version: status.version.name_clean
+            } : null)
+            .catch(() => null);
 
-            if (mcStatus && mcStatus.players) {
-                minecraftPlayers = mcStatus.players.online;
-                maxPlayers = mcStatus.players.max;
-                minecraftVersion = mcStatus.version.name_clean;
-            } else {
-                //try bedrock
-                const mcStatusBedrock = await mcs.statusBedrock(ip, port, { timeout: 5000 });
-                if (mcStatusBedrock && mcStatusBedrock.players) {
-                    minecraftPlayers = mcStatusBedrock.players.online;
-                    maxPlayers = mcStatusBedrock.players.max;
-                    minecraftVersion = mcStatusBedrock.version.name_clean;
+        const mcBedrockCheck = mcs.statusBedrock(ip, port, { timeout })
+            .then(status => status?.players ? {
+                players: status.players.online,
+                maxPlayers: status.players.max,
+                version: status.version.name_clean
+            } : null)
+            .catch(() => null);
+
+        const fivemCheck = axios.get(`http://${ip}:${port}/info.json`, { timeout })
+            .then(response => {
+                if (response.data?.vars?.Players) {
+                    return {
+                        players: response.data.vars.Players,
+                        maxPlayers: response.data.vars.sv_maxClients,
+                        version: response.data.server.match(/v[\d.]+/)?.[0],
+                        joinLink: `http://${ip}:${port}`
+                    };
                 }
-            }
-            if (minecraftPlayers !== null && maxPlayers !== null) {
-                extras = {
-                    players: minecraftPlayers,
-                    maxPlayers: maxPlayers,
-                    version: minecraftVersion
-                };
-            return extras; //end here if we found minecraft info since there would be no point in checking further
-            }
-        } catch (error) {
-            //ignore errors
-        }
+                return null;
+            })
+            .catch(() => null);
 
-        //try getting fivem server info
-        //ip:port/info.json
-        try {
-            const response = await axios.get(`http://${ip}:${port}/info.json`, { timeout: 5000 });
-            if (response.data && response.data.vars.Players) {
-                extras = {
-                    players: response.data.vars.Players, //query players.json for more player info if needed
-                    maxPlayers: response.data.vars.sv_maxClients,
-                    version: response.data.server.match(/v[\d.]+/)[0],
-                    joinLink: `http://${ip}:${port}`
-                };
-                return extras; //end here if we found fivem info since there would be no point in checking further
-            }
-        } catch (error) {
-            //ignore errors
-        }
+        // Run all checks in parallel
+        const results = await Promise.all([mcJavaCheck, mcBedrockCheck, fivemCheck]);
 
-        return extras;
+        // Return the first non-null result
+        return results.find(r => r) || {};
     }
 };
