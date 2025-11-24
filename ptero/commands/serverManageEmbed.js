@@ -81,13 +81,26 @@ async function serverManageEmbed(interaction, serverId) {
             }
         });
 
-        ws.on("close", () => console.log(`WebSocket closed for server ${serverId}`));
+        ws.on("close", (code, reason) => {
+            //console.log(`WebSocket connection closed. Code: ${code}, Reason: ${reason.toString()}`);
+            if (code === 1006) {
+                interaction.followUp({ content: `WebSocket connection was closed abnormally. The server may be offline or there was a network issue.`, ephemeral: true });
+                serverResourceUsage.current_state = "offline";
+            } else if (code !== 1000) {
+                interaction.followUp({ content: `WebSocket connection was unexpectedly closed (Code: ${code}). The server may be offline or there was a network issue.`, ephemeral: true });
+                serverResourceUsage.current_state = "offline";
+            }
+        });
         ws.on("error", (err) => console.error("WebSocket error:", err));
 
+
+        let expireStamp = Date.now()
         // Create server embed
-        const embed = new EmbedBuilder() //make getter function later for easier editing?? Components v2?? 
+        const embed = new EmbedBuilder() //make getter function later for easier editing??
             .setTitle(`Manage Server: ${serverDetails.name}`)
             .setColor(0x00AE86)
+            //show expiry (2minutes from expireStamp)
+            .setDescription(`**Server ID:** \`${serverDetails.identifier}\`\n** Session expires:** <t:${Math.floor((expireStamp + 2 * 60 * 1000) / 1000)}:R>`)
             .addFields(
                 { name: "Address", value: `\`\`\`${defaultAllocation.attributes.ip_alias}:${defaultAllocation.attributes.port}\`\`\``, inline: false },
 
@@ -98,7 +111,7 @@ async function serverManageEmbed(interaction, serverId) {
                 { name: "Disk Usage", value: `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``, inline: true },
                 { name: "Uptime", value: `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``, inline: true },
                 //last three lines of logs
-                { name: "Console", value: logBuffer.length === 0 ? "Loading..." : `\`\`\`\n${embedConsoleStr(logBuffer, 3, 1024)}\n\`\`\``, inline: false }, //limit to last 3 lines or 1024 characters (discord embed limit)
+                { name: "Console", value: logBuffer.length === 0 ? "\`\`\`Loading...\`\`\`" : `\`\`\`\n${embedConsoleStr(logBuffer, 3, 512)}\n\`\`\``, inline: false }, //limit to last 3 lines or 512 characters (half of discord embed limit)
                 
 
             )
@@ -192,6 +205,8 @@ async function serverManageEmbed(interaction, serverId) {
 
         collector.on("collect", async (buttonInteraction) => {
             try {
+                expireStamp = Date.now()
+                embed.setDescription(`**Server ID:** \`${serverDetails.identifier}\`\n** Session expires:** <t:${Math.floor((expireStamp + 2 * 60 * 1000) / 1000)}:R>`);
                 // --------------------
                 // COOLDOWN (only for logs)
                 // --------------------
@@ -200,7 +215,7 @@ async function serverManageEmbed(interaction, serverId) {
                     if (cooldowns.has(buttonInteraction.user.id) && now < cooldowns.get(buttonInteraction.user.id)) {
                         const remaining = Math.ceil((cooldowns.get(buttonInteraction.user.id) - now)/1000);
                         return await buttonInteraction.reply({
-                            content: `Please wait ${remaining}s before requesting logs again.`,
+                            content: `Please wait ${remaining}s before requesting full logs again.`,
                             ephemeral: true
                         });
                     }
@@ -246,6 +261,8 @@ async function serverManageEmbed(interaction, serverId) {
                             //if 403 error, insufficient permissions
                             if (err === 403) {
                                 return await buttonInteraction.reply({ content: "You do not have permission to restart this server.", ephemeral: true });
+                            } else if (err === 504) {
+                                return await buttonInteraction.reply({ content: "The server is currently unreachable (504 Gateway Timeout). Please try again later.", ephemeral: true });
                             }
                             console.error("Error restarting server:", err);
                             return await buttonInteraction.reply({ content: "An unknown error occurred while restarting the server.", ephemeral: true });
@@ -266,6 +283,8 @@ async function serverManageEmbed(interaction, serverId) {
                             //if 403 error, insufficient permissions
                             if (err === 403) {
                                 return await buttonInteraction.reply({ content: "You do not have permission to stop this server.", ephemeral: true });
+                            } else if (err === 504) {
+                                return await buttonInteraction.reply({ content: "The server is currently unreachable (504 Gateway Timeout). Please try again later.", ephemeral: true });
                             }
                             console.error("Error stopping server:", err);
                             return await buttonInteraction.reply({ content: "An unknown error occurred while stopping the server.", ephemeral: true });
@@ -275,6 +294,12 @@ async function serverManageEmbed(interaction, serverId) {
                     // 🔄 REFRESH BUTTON
                     case refreshButtonId: {
                         try {
+
+                            //make sure websocket is still open otherwise consider the server offline
+                            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                                serverResourceUsage.current_state = "offline";
+                            }
+
                             await updateAllEmbedFields(embed, serverDetails, serverResourceUsage, logBuffer);
                             await buttonInteraction.update({ embeds: [embed] });
                             liveUpdateInterval.refresh(); // reset interval timer
@@ -316,7 +341,7 @@ async function serverManageEmbed(interaction, serverId) {
 
             // Close websocket safely
             try {
-                if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+                if (ws && ws.readyState === WebSocket.OPEN) ws.close(1000, "Session ended");;
             } catch (err) {
                 console.error("Failed closing websocket:", err);
             }
@@ -334,7 +359,12 @@ async function serverManageEmbed(interaction, serverId) {
         });
 
     } catch (error) {
-        console.error("Error fetching server details:", error);
+        if (error == 504) {
+            return interaction.editReply({
+                content: "The Wings node for this server is currently unreachable (504 Gateway Timeout). Please try again later or contact your server provider.",
+            });
+        }
+        console.error("Error fetching server details for server manage embed:", getErrorMessage(error));
         return interaction.editReply({
             content: "There was an unexpected error fetching server details. Please try again later.",
         });
@@ -360,7 +390,7 @@ async function updateAllEmbedFields(embed, serverDetails, serverResourceUsage, l
     updateEmbedField(embed, "Disk Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``);
     updateEmbedField(embed, "Uptime", `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``);
     //add recent logs
-    updateEmbedField(embed, "Console", logBuffer.length === 0 ? "N/A" : `\`\`\`\n${embedConsoleStr(logBuffer)}\n\`\`\``);
+    updateEmbedField(embed, "Console", logBuffer.length === 0 ? "\`\`\`N/A\`\`\`" : `\`\`\`\n${embedConsoleStr(logBuffer)}\n\`\`\``);
     embed.setTimestamp();
 }
 
