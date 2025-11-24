@@ -72,7 +72,7 @@ Full support for:
 
 ### • Extended API for more info about your servers
   - Fetch Player counts for game servers that support it (e.g., Minecraft, FiveM)
-  - Fetch server version for game servers that support it (e.g., Minecraft)
+  - Fetch server version for game servers that support it (e.g., Minecraft, FiveM)
   - More features may be added in the future!
 
 
@@ -145,6 +145,8 @@ Supports:
 
 - apiKey is required for any node-related actions, including node status embeds. More actions may be added in the future that require this key but their use will likely be intended for panel owners only.
 
+- MANAGER_EMBED_UPDATE_INTERVAL can be set as low as 1 second if just you or very few others will be using the bot. Higher values are recommended for larger bots to avoid hitting rate limits.
+ 
 ## 📚 Documentation
 
 - Offical documentation is not yet available. Please refer to the source code and this readme for guidance.
