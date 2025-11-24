@@ -138,8 +138,12 @@ module.exports = {
         const extras = await getServerExtras(ip, port);
         let latestLogs = null;
 
-        const isAppKeyValid = await isApplicationKeyValid(pterodactyl.apiKey);
-        if (pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs && isAppKeyValid) {
+        if (pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs) {
+            const isAppKeyValid = await isApplicationKeyValid(pterodactyl.apiKey);
+            if (!isAppKeyValid) {
+                console.warn("The Pterodactyl application API key is invalid. Cannot fetch server logs for status embed for server ID:", serverId);
+                return;
+            }
             //try and get the logs using an api request to wings (need an appliction api key with server.read permission) This will be optional so users without an api key can still use the bot
             const pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, pterodactyl.apiKey);
             const nodes = await pteroApp.getAllNodes();
