@@ -67,7 +67,7 @@ async function serverManageEmbed(interaction, serverId) {
                 }else if (payload.event === "status") { //sent when server status changes
                     const status = payload.args[0];
                     serverResourceUsage.current_state = status;
-                    logBuffer += `\u001b[1m\u001b[33mcontainer@${serverId}~ \u001b[0m Server marked as: ${status} ---\n`;
+                    logBuffer += `\u001b[1m\u001b[33mcontainer@${serverId}~ \u001b[0m Server marked as: ${status} \n`;
                 } else if (payload.event === "stats") { //normally this is sent once every second unless the server is off then its only sent once upon auth success until the server is started
                     const liveStats = JSON.parse(payload.args[0]);
                     serverResourceUsage.current_state = liveStats.state;
