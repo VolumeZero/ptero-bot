@@ -5,7 +5,7 @@ const { pteroAppReq } = require("../requests/appApiReq");
 // Helper functions
 function serverPowerEmoji(status) {
     switch (status) {
-        case "running": return "🟢 Online";
+        case "running": return "🟢 Running";
         case "offline": return "🔴 Offline";
         case "starting": return "🟡 Starting";
         case "stopping": return "🟠 Stopping";
