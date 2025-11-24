@@ -18,12 +18,11 @@ module.exports = {
     async execute(client) {
 
         try {
-
-
-            console.log(`🐦 Initiating Ptero-Bot...`)
+            console.log(`🐦 Initiating Ptero-Bot...`);
             const isPanelUrlValid = await validatePanelUrl();
             if (!isPanelUrlValid) {
                 console.error(`❌ The Pterodactyl panel URL (${pterodactyl.domain}) is invalid. Please check the URL in the config.json file and ensure the panel is online and reachable from the internet.`);
+                console.log(`🚪 Exiting Ptero-Bot...`);
                 process.exit(1);
             }
 
@@ -37,10 +36,13 @@ module.exports = {
             } else {
                 console.warn("⚠️ The pterodactyl API key is invalid. Node status embeds will not be updated. Server status logs will also not function.");
             }
-            updatePresence(client); 
-            setInterval(() => updatePresence(client), 10 * 60 * 1000); // Update presence every 15 minutes
 
             console.log(`✅ Ready and logged in as ${client.user.tag}`);
+            const gitHubUrl = "https://github.com/VolumeZero/ptero-bot";
+            console.log(`🔗 Report any issues on: ${gitHubUrl}`);
+
+            updatePresence(client); 
+            setInterval(() => updatePresence(client), 10 * 60 * 1000); // Update presence every 15 minutes
         } catch (error) {
             console.error("Error in clientReady event:", error);
         }
