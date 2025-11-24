@@ -59,7 +59,7 @@ async function serverManageEmbed(interaction, serverId) {
                 const payload = JSON.parse(data.toString());
                 if (payload.event === "auth success") {
                     ws.send(JSON.stringify({ event: "send logs", args: [null] })); //this tells the websocket to send previous logs (the amount (lines) is determined by wings config i do believe)
-                } else if (payload.event === "console output") { //sent any time there is new console output
+                } else if (payload.event === "console output" || payload.event === "install output") { //sent any time there is new console output
                     logBuffer += stripAnsi(payload.args.join(" ")) + "\n"; //remove pterodactyl/wings ansi codes from logs
                     if (logBuffer.length > 2048) {
                         logBuffer = logBuffer.slice(-2048); //really only need the last 2048 characters of logs, this helps memory usage
@@ -203,7 +203,7 @@ async function serverManageEmbed(interaction, serverId) {
         const collector = interaction.channel.createMessageComponentCollector({
             filter: buttonInteraction => buttonInteraction.user.id === interaction.user.id,  
             time: 15 * 60 * 1000,
-            idle: 120_000            // ❗ 2 MINUTE INACTIVITY TIMEOUT
+            idle: pterodactyl.SERVER_MANAGER_TIMEOUT * 1000 || 2 * 60 * 1000, //default to 2 minutes if not set
         });
 
         const cooldowns = new Map(); // userId -> timestamp
