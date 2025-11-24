@@ -1,6 +1,6 @@
 {
 	"name": "ptero-bot",
-	"version": "3.3.0",
+	"version": "0.0.1",
 	"description": "A discord.js bot for managing Pterodactyl servers.",
 	"types": "./typings.d.ts",
 	"main": "bot.js",
