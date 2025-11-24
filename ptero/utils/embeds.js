@@ -4,7 +4,7 @@ const { pterodactyl } = require("../../config.json");
 const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, embedColorFromWingsStatus, stripAnsi, isApplicationKeyValid } = require("./serverUtils");
 const { getServerExtras } = require("./getServerExtras");
 const { getAppErrorMessage } = require("./appErrors");
-const { wingsApiReq } = require("../requests/wingsApiReq");
+const { wingsApiReq, getWingsError } = require("../requests/wingsApiReq");
 const { getErrorMessage } = require("./clientErrors");
 
 module.exports = {
@@ -28,7 +28,7 @@ module.exports = {
         try {
             servers = await wingsApiReq(nodeDetails, nodeConfig.token, 'servers');
         } catch (error) {
-            console.warn(`Could not fetch servers from Wings for node ID ${nodeId} :`, getAppErrorMessage(error));
+            console.warn(`Could not fetch servers from Wings for node with ID ${nodeId} : ${await getWingsError(error)} You can delete the status embed if you wish to stop seeing this message.`);
             // Continue with empty servers array
         }
 
@@ -117,7 +117,9 @@ module.exports = {
             serverResourceUsage = await pteroClient.getServerUsages(serverId);
             serverPowerState = serverResourceUsage.current_state;
         } catch (error) {
-            console.warn(`Could not fetch server usage for ${serverId} :`,  getErrorMessage(error));
+            if (pterodactyl.ERROR_LOGGING_ENABLED) {
+                console.warn(`Could not fetch server usage for ${serverId} :  ${getErrorMessage(error)} The node may be offline or unreachable.`);
+            }
             // Set default offline values
             serverResourceUsage = {
                 current_state: "offline",
