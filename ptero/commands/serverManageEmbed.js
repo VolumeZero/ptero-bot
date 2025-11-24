@@ -110,8 +110,13 @@ async function serverManageEmbed(interaction, serverId) {
 
                 { name: "Disk Usage", value: `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``, inline: true },
                 { name: "Uptime", value: `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``, inline: true },
+
                 //last three lines of logs
                 { name: "Console", value: logBuffer.length === 0 ? "\`\`\`Loading...\`\`\`" : `\`\`\`\n${embedConsoleStr(logBuffer, 3, 512)}\n\`\`\``, inline: false }, //limit to last 3 lines or 512 characters (half of discord embed limit)
+
+                //network usage
+                { name: "Network Up", value: `> 📤  ${formatBytes(serverResourceUsage.resources.network_tx_bytes)}`, inline: true },
+                { name: "Network Down", value: `> 📥  ${formatBytes(serverResourceUsage.resources.network_rx_bytes)}`, inline: true },
                 
 
             )
@@ -119,6 +124,27 @@ async function serverManageEmbed(interaction, serverId) {
             .setFooter({ text: `${pterodactyl.EMBED_FOOTER_TEXT}`, iconURL: `${pterodactyl.EMBED_FOOTER_ICON_URL}` });
 
         const buttons = [];
+        const restartServerButtonId = `restart_server_${interaction.user.id}_${serverId}`;
+        const restartServerButton = new ButtonBuilder()
+            .setLabel('Start / Restart 🔄')
+            .setStyle(ButtonStyle.Success)
+            .setCustomId(restartServerButtonId);
+        buttons.push(restartServerButton);
+
+        const stopServerButtonId = `stop_server_${interaction.user.id}_${serverId}`;
+        const stopServerButton = new ButtonBuilder()
+            .setLabel('Stop ⏹️')
+            .setStyle(ButtonStyle.Danger)
+            .setCustomId(stopServerButtonId);
+        buttons.push(stopServerButton);
+
+        const refreshButtonId = `refresh_${interaction.user.id}_${serverId}`;
+        const refreshButton = new ButtonBuilder()
+            .setCustomId(refreshButtonId)
+            .setLabel("Refresh Info 🔄")
+            .setStyle(ButtonStyle.Secondary);
+        buttons.push(refreshButton);
+
         const sendCommandButtonId = `send_command_${interaction.user.id}_${serverId}`;
         const sendCommandButton = new ButtonBuilder()
             .setLabel('Send Command 🖥️')
@@ -131,27 +157,6 @@ async function serverManageEmbed(interaction, serverId) {
             .setStyle(ButtonStyle.Link)
             .setURL(`${pterodactyl.domain}/server/${serverId}`);
         buttons.push(panelLinkButton);
-
-        const stopServerButtonId = `stop_server_${interaction.user.id}_${serverId}`;
-        const stopServerButton = new ButtonBuilder()
-            .setLabel('Stop Server ⏹️')
-            .setStyle(ButtonStyle.Danger)
-            .setCustomId(stopServerButtonId);
-        buttons.push(stopServerButton);
-
-        const restartServerButtonId = `restart_server_${interaction.user.id}_${serverId}`;
-        const restartServerButton = new ButtonBuilder()
-            .setLabel('Restart Server 🔄')
-            .setStyle(ButtonStyle.Success)
-            .setCustomId(restartServerButtonId);
-        buttons.push(restartServerButton);
-
-        const refreshButtonId = `refresh_${interaction.user.id}_${serverId}`;
-        const refreshButton = new ButtonBuilder()
-            .setCustomId(refreshButtonId)
-            .setLabel("Refresh Info 🔄")
-            .setStyle(ButtonStyle.Secondary);
-        buttons.push(refreshButton);
 
         const sftpInfoButtonId = `get_sftp_info_${interaction.user.id}_${serverId}`;
         const sftpInfoButton = new ButtonBuilder()
@@ -168,8 +173,8 @@ async function serverManageEmbed(interaction, serverId) {
         buttons.push(consoleLogButton);
 
 
-        const actionRow1 = new ActionRowBuilder().addComponents(buttons.slice(0, 2));
-        const actionRow2 = new ActionRowBuilder().addComponents(buttons.slice(2, 5));
+        const actionRow1 = new ActionRowBuilder().addComponents(buttons.slice(0, 3));
+        const actionRow2 = new ActionRowBuilder().addComponents(buttons.slice(3, 5));
         const actionRow3 = new ActionRowBuilder().addComponents(buttons.slice(5, 7));
 
         await interaction.editReply({ embeds: [embed], components: [actionRow1, actionRow2, actionRow3] });
@@ -337,7 +342,7 @@ async function serverManageEmbed(interaction, serverId) {
 
         collector.on("end", (collected, reason) => {
             clearInterval(liveUpdateInterval);
-            console.log("Collector ended because:", reason);
+            //console.log("Collector ended because:", reason);
 
             // Close websocket safely
             try {
@@ -346,9 +351,9 @@ async function serverManageEmbed(interaction, serverId) {
                 console.error("Failed closing websocket:", err);
             }
             // Disable buttons (all except panel link)
-            const disabledButtons1 = buttons.slice(0, 2).map(btn => ButtonBuilder.from(btn).setDisabled(true));
-            disabledButtons1[1] = buttons[1]; //keep panel link enabled
-            const disabledButtons2 = buttons.slice(2, 5).map(btn => ButtonBuilder.from(btn).setDisabled(true));
+            const disabledButtons1 = buttons.slice(0, 3).map(btn => ButtonBuilder.from(btn).setDisabled(true));
+            const disabledButtons2 = buttons.slice(3, 5).map(btn => ButtonBuilder.from(btn).setDisabled(true));
+            disabledButtons2[1] = ButtonBuilder.from(buttons[4]).setDisabled(false);
             const disabledButtons3 = buttons.slice(5, 7).map(btn => ButtonBuilder.from(btn).setDisabled(true));
             const disabledRow1 = new ActionRowBuilder().addComponents(disabledButtons1);
             const disabledRow2 = new ActionRowBuilder().addComponents(disabledButtons2);
@@ -389,6 +394,8 @@ async function updateAllEmbedFields(embed, serverDetails, serverResourceUsage, l
     updateEmbedField(embed, "Memory Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.memory_bytes)} / ${formatMegabytes(serverDetails.limits.memory)}\`\`\``);
     updateEmbedField(embed, "Disk Usage", `\`\`\`${formatBytes(serverResourceUsage.resources.disk_bytes)} / ${formatMegabytes(serverDetails.limits.disk)}\`\`\``);
     updateEmbedField(embed, "Uptime", `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``);
+    updateEmbedField(embed, "Network Up", `> 📤  ${formatBytes(serverResourceUsage.resources.network_tx_bytes)}`);
+    updateEmbedField(embed, "Network Down", `> 📥  ${formatBytes(serverResourceUsage.resources.network_rx_bytes)}`);
     //add recent logs
     updateEmbedField(embed, "Console", logBuffer.length === 0 ? "\`\`\`N/A\`\`\`" : `\`\`\`\n${embedConsoleStr(logBuffer)}\n\`\`\``);
     embed.setTimestamp();
