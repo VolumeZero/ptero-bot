@@ -91,7 +91,7 @@ async function serverManageEmbed(interaction, serverId) {
         });
 
         ws.on("close", (code, reason) => {
-            console.log(`WebSocket connection closed. Code: ${code}, Reason: ${reason.toString()}`);
+            //console.log(`WebSocket connection closed. Code: ${code}, Reason: ${reason.toString()}`);
             if (code === 1006) {
                 interaction.followUp({ content: `WebSocket connection was closed abnormally. The server may be offline or there was a network issue.`, ephemeral: true });
                 serverResourceUsage.current_state = "offline";
@@ -424,7 +424,7 @@ async function serverManageEmbed(interaction, serverId) {
 
         collector.on("end", (collected, reason) => {
             clearInterval(liveUpdateInterval);
-            console.log("Collector ended because:", reason);
+            //console.log("Collector ended because:", reason);
 
             // Close websocket safely
             try {
