@@ -27,7 +27,7 @@
 		"@discordjs/rest": "^1.0.0",
 		"axios": "^1.13.2",
 		"discord-api-types": "^0.36.2",
-		"discord.js": "^14.0.2",
+		"discord.js": "^14.25.1",
 		"node-mcstatus": "^1.2.1",
 		"nodeactyl": "^3.3.0",
 		"socket.io": "^4.8.1",
