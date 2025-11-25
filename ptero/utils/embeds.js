@@ -159,7 +159,7 @@ module.exports = {
                         });
                         if (wingsLogs?.data) {
                             latestLogs = wingsLogs.data
-                                .map(line => stripAnsi(line).replace(/.*?\[[^\]]*]\s*/, ''))
+                                .map(line => line.replace(/.*?\[[^\]]*]\s*/, ''))
                                 .join('\n');
 
                             // Trim to 512 characters if needed
@@ -203,7 +203,7 @@ module.exports = {
         }
         if (latestLogs && pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs) {
             embed.addFields(
-                { name: "Latest Logs", value: `\`\`\`${latestLogs}\`\`\``, inline: false },
+                { name: "Latest Logs", value: `\`\`\`ansi\n${latestLogs}\`\`\``, inline: false },
             );
         }
         if (extras && extras.joinLink !== undefined) {
