@@ -51,8 +51,8 @@ function stripAnsi(str) {
         .replace(/.\x08/g, '')
         // Remove stray escape characters
         .replace(/\x1b/g, '')
-        // Cleanup leftover control chars
-        .replace(/[\x00-\x1F\x7F]/g, '');
+        // Cleanup leftover control chars (excluding \n which is \x0A)
+        .replace(/[\x00-\x09\x0B-\x1F\x7F]/g, '');
 }
 
 
@@ -78,7 +78,7 @@ function embedColorFromWingsStatus(status) {
     }
 }
 
-function embedConsoleStr(logBuffer, lineCount = 3, maxLength = 1024) {
+function embedConsoleStr(logBuffer, lineCount, maxLength) {
     // Normalize to array of lines
     const lines = Array.isArray(logBuffer)
         ? logBuffer
@@ -88,7 +88,6 @@ function embedConsoleStr(logBuffer, lineCount = 3, maxLength = 1024) {
 
     // Last X lines
     let output = lines.slice(-lineCount).join("\n");
-
     // Trim if too long
     if (output.length > maxLength) {
         output = output.slice(output.length - maxLength);
