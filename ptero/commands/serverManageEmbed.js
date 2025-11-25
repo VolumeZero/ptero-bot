@@ -53,6 +53,7 @@ async function serverManageEmbed(interaction, serverId) {
         });
 
         let logBuffer = "";
+        let currentLogMessage = null;
         //This is the main websocket handler, this avoids rate limits on the pterodactyl side so discord is our only bottleneck
         ws.on("message", (data) => {
             try {
@@ -60,14 +61,18 @@ async function serverManageEmbed(interaction, serverId) {
                 if (payload.event === "auth success") {
                     ws.send(JSON.stringify({ event: "send logs", args: [null] })); //this tells the websocket to send previous logs (the amount (lines) is determined by wings config i do believe)
                 } else if (payload.event === "console output" || payload.event === "install output") { //sent any time there is new console output
-                    logBuffer += stripAnsi(payload.args.join(" ")) + "\n"; //remove pterodactyl/wings ansi codes from logs
+                    logBuffer += payload.args[0] + "\n";
                     if (logBuffer.length > 2048) {
-                        logBuffer = logBuffer.slice(-2048); //really only need the last 2048 characters of logs, this helps memory usage
+                        logBuffer = logBuffer.slice(-2048); //really only need the last 2048 characters of logs
                     }
                 }else if (payload.event === "status") { //sent when server status changes
                     const status = payload.args[0];
                     serverResourceUsage.current_state = status;
-                    logBuffer += `\u001b[1m\u001b[33mcontainer@${serverId}~ \u001b[0m Server marked as: ${status} \n`;
+                    logBuffer += `\u001b[0;33mcontainer@pterodactyl~\u001b[0;0m Server marked as: ${status}\n`;
+                    if (logBuffer.length > 2048) {
+                        logBuffer = logBuffer.slice(-2048);
+                    }
+                    
                 } else if (payload.event === "stats") { //normally this is sent once every second unless the server is off then its only sent once upon auth success until the server is started
                     const liveStats = JSON.parse(payload.args[0]);
                     serverResourceUsage.current_state = liveStats.state;
@@ -86,7 +91,7 @@ async function serverManageEmbed(interaction, serverId) {
         });
 
         ws.on("close", (code, reason) => {
-            //console.log(`WebSocket connection closed. Code: ${code}, Reason: ${reason.toString()}`);
+            console.log(`WebSocket connection closed. Code: ${code}, Reason: ${reason.toString()}`);
             if (code === 1006) {
                 interaction.followUp({ content: `WebSocket connection was closed abnormally. The server may be offline or there was a network issue.`, ephemeral: true });
                 serverResourceUsage.current_state = "offline";
@@ -98,13 +103,12 @@ async function serverManageEmbed(interaction, serverId) {
         ws.on("error", (err) => console.error("WebSocket error:", err));
 
 
-        let expireStamp = Date.now()
         // Create server embed
         const embed = new EmbedBuilder() //make getter function later for easier editing??
             .setTitle(`Manage Server: ${serverDetails.name}`)
             .setColor(0x00AE86)
             //show expiry (2minutes from expireStamp)
-            .setDescription(`**Server ID:** \`${serverDetails.identifier}\`\n** Session expires:** <t:${Math.floor((expireStamp + 2 * 60 * 1000) / 1000)}:R>`)
+            .setDescription(`**Server ID:** \`${serverDetails.identifier}\`\n** Session expires:** <t:${Math.floor(Math.floor(Date.now() / 1000) + Number(pterodactyl.SERVER_MANAGER_TIMEOUT))}:R>`)
             .addFields(
                 { name: "Address", value: `\`\`\`${defaultAllocation.attributes.ip_alias}:${defaultAllocation.attributes.port}\`\`\``, inline: false },
 
@@ -116,7 +120,7 @@ async function serverManageEmbed(interaction, serverId) {
                 { name: "Uptime", value: `\`\`\`${uptimeToString(serverResourceUsage.resources.uptime)}\`\`\``, inline: true },
 
                 //last three lines of logs
-                { name: "Console", value: logBuffer.length === 0 ? "\`\`\`Loading...\`\`\`" : `\`\`\`\n${embedConsoleStr(logBuffer, 3, 512)}\n\`\`\``, inline: false }, //limit to last 3 lines or 512 characters (half of discord embed limit)
+                { name: "Console", value: logBuffer.length === 0 ? "\`\`\`Loading...\`\`\`" : `\`\`\`${embedConsoleStr(stripAnsi(logBuffer), 3, 512)}\n\`\`\``, inline: false }, //limit to last 3 lines or 512 characters (half of discord embed limit)
 
                 //network usage
                 { name: "Network Up", value: `> 📤  ${formatBytes(serverResourceUsage.resources.network_tx_bytes)}`, inline: true },
@@ -142,10 +146,18 @@ async function serverManageEmbed(interaction, serverId) {
             .setCustomId(stopServerButtonId);
         buttons.push(stopServerButton);
 
+        const killServerButtonId = `kill_server_${interaction.user.id}_${serverId}`;
+        const killServerButton = new ButtonBuilder()
+            .setLabel('Kill ❌')
+            .setStyle(ButtonStyle.Danger)
+            .setCustomId(killServerButtonId)
+            .setDisabled(true);
+        buttons.push(killServerButton);
+
         const refreshButtonId = `refresh_${interaction.user.id}_${serverId}`;
         const refreshButton = new ButtonBuilder()
             .setCustomId(refreshButtonId)
-            .setLabel("Refresh Info 🔄")
+            .setLabel("Refresh Info 🔃")
             .setStyle(ButtonStyle.Secondary);
         buttons.push(refreshButton);
 
@@ -176,24 +188,50 @@ async function serverManageEmbed(interaction, serverId) {
             .setStyle(ButtonStyle.Primary);
         buttons.push(consoleLogButton);
 
+        const endSessionButtonId = `end_session_${interaction.user.id}_${serverId}`;
+        const endSessionButton = new ButtonBuilder()
+            .setLabel('End Session 🚫')
+            .setStyle(ButtonStyle.Secondary)
+            .setCustomId(endSessionButtonId)
+        buttons.push(endSessionButton);
 
-        const actionRow1 = new ActionRowBuilder().addComponents(buttons.slice(0, 3));
-        const actionRow2 = new ActionRowBuilder().addComponents(buttons.slice(3, 5));
-        const actionRow3 = new ActionRowBuilder().addComponents(buttons.slice(5, 7));
 
-        await interaction.editReply({ embeds: [embed], components: [actionRow1, actionRow2, actionRow3] });
+        const initialButtonRows = handleButtonToggle(buttons, serverResourceUsage.current_state);
+        await interaction.editReply({ embeds: [embed], components: initialButtonRows });
 
+        // Set up live update interval
+        let lastSentLogs = "";
         let liveUpdateInterval = setInterval(async () => {
-            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            if (!ws || ws.readyState !== WebSocket.OPEN) return console.warn(`WebSocket not open, skipping live update for server manager embed for server: ${serverId}`);
 
             try {
+                
                 await updateAllEmbedFields(embed, serverDetails, serverResourceUsage, logBuffer);
-                await interaction.editReply({ embeds: [embed] });
+                const newActionRows = handleButtonToggle(buttons, serverResourceUsage.current_state);
+                await interaction.editReply({ embeds: [embed] , components: newActionRows });
+
+                if (currentLogMessage && !currentLogMessage.deleted) {
+                    const isDeleted = await currentLogMessage.fetch().then(() => false).catch(() => true);
+                    if (isDeleted) {
+                        currentLogMessage = null;
+                    } else {
+                        const logsToSend = logBuffer.length === 0
+                            ? "No logs available."
+                            : `\`\`\`ansi\n${logBuffer.slice(-1900)}\n\`\`\``; //we can actually use ansi when updating here since it doesnt glitch on updates like embeds do
+                        if (logsToSend !== lastSentLogs) {
+                            lastSentLogs = logsToSend;
+                            await currentLogMessage.edit({ content: logsToSend });
+                        }
+                    }
+                } else {
+                    currentLogMessage = null;
+                }
+
             } catch (err) {
                 //this is some AI shit i have no idea if it works lol
                 if (err.code === 50013 || err.status === 429) {
                     // Rate limited or missing permissions
-                    console.warn(`Discord rate limit hit, increasing update interval on server manager for server: ${serverId}`)
+                    console.warn(`⚠️ Discord rate limit hit, increasing update interval on server manager for server: ${serverId}`)
                     clearInterval(liveUpdateInterval);
                     liveUpdateInterval = setInterval(arguments.callee, (pterodactyl.MANAGER_EMBED_UPDATE_INTERVAL * 2) * 1000);
                 } else {
@@ -214,8 +252,9 @@ async function serverManageEmbed(interaction, serverId) {
 
         collector.on("collect", async (buttonInteraction) => {
             try {
-                expireStamp = Date.now()
-                embed.setDescription(`**Server ID:** \`${serverDetails.identifier}\`\n** Session expires:** <t:${Math.floor((expireStamp + 2 * 60 * 1000) / 1000)}:R>`);
+                const expireEpochSeconds = Math.floor((Date.now() / 1000) + Number(pterodactyl.SERVER_MANAGER_TIMEOUT));
+                embed.setDescription(`**Server ID:** \`${serverDetails.identifier}\`\n** Session expires:** <t:${expireEpochSeconds}:R>`);
+
                 // --------------------
                 // COOLDOWN (only for logs)
                 // --------------------
@@ -240,29 +279,37 @@ async function serverManageEmbed(interaction, serverId) {
                     case logsButtonId: {
                         const logsToSend = logBuffer.length === 0
                             ? "No logs available."
-                            : `\`\`\`\n${logBuffer.slice(-1990)}\n\`\`\``;
-                    
-                        return await buttonInteraction.reply({ content: logsToSend, ephemeral: true });
+                            : `\`\`\`ansi\n${logBuffer.slice(-1900)}\n\`\`\``;
+                        currentLogMessage = await buttonInteraction.reply({ content: logsToSend, ephemeral: true });
+                        lastSentLogs = logsToSend;
+                        return 
                     }
                 
                     // 🔑 SFTP INFO BUTTON
                     case sftpInfoButtonId: {
-                        return await buttonInteraction.reply({
-                            ephemeral: true,
-                            content:
-                                `**Host**: \`sftp://${serverDetails.sftp_details.ip}:${serverDetails.sftp_details.port}\`\n` +
-                                `**Username**: ||\`${userInfo.username}.${serverId}\`||\n` +
-                                `**Password**: \`(Your account password)\`\n`
-                        });
+                        const sftpInfoEmbed = new EmbedBuilder()
+                            .setTitle(`SFTP for ${serverDetails.name}`)
+                            .setColor(0x00AE86)
+                            .setDescription("Use the following details to connect to your server via SFTP.")
+                            .addFields(
+                                { name: "Host", value: `> ${serverDetails.sftp_details.ip}`, inline: true },
+                                { name: "Port", value: `> ${serverDetails.sftp_details.port}`, inline: true },
+                                { name: "Username", value: `> ||${userInfo.username}.${serverId}||`, inline: false },
+                                { name: "Password", value: `> (Your account password for ${pterodactyl.domain})`, inline: false },
+                            )
+                            .setTimestamp()
+                            .setFooter({ text: `${pterodactyl.EMBED_FOOTER_TEXT}`, iconURL: `${pterodactyl.EMBED_FOOTER_ICON_URL}` });
+                        return buttonInteraction.reply({embeds: [sftpInfoEmbed], ephemeral: true});
                     }
 
                     // 🔄 RESTART SERVER BUTTON
                     case restartServerButtonId: {
                         try {
+                            const startType = serverResourceUsage.current_state === "running" ? "restarting" : "starting";
                             const success = await pteroClient.restartServer(serverId);
                             updateEmbedField(embed, "Status", `\`\`\`${serverPowerEmoji(serverResourceUsage.current_state)}\`\`\`` ?? "N/A");
                             if (success) {
-                                return await buttonInteraction.reply({ content: "Server is restarting...", ephemeral: true });
+                                return await buttonInteraction.reply({ content: `Server is ${startType}...`, ephemeral: true });
                             } else {
                                 return await buttonInteraction.reply({ content: "Failed to restart the server.", ephemeral: true });
                             }
@@ -300,17 +347,40 @@ async function serverManageEmbed(interaction, serverId) {
                         }
                     }
 
+                    // ❌ KILL SERVER BUTTON
+                    case killServerButtonId: {
+                        try {
+                            const success = await pteroClient.killServer(serverId);
+                            updateEmbedField(embed, "Status", `\`\`\`${serverPowerEmoji(serverResourceUsage.current_state)}\`\`\`` ?? "N/A");
+                            if (success) {
+                                return await buttonInteraction.reply({ content: "Server killed...", ephemeral: true });
+                            } else {
+                                return await buttonInteraction.reply({ content: "Failed to kill the server.", ephemeral: true });
+                            }
+                        } catch (err) {
+                            //if 403 error, insufficient permissions
+                            if (err === 403) {
+                                return await buttonInteraction.reply({ content: "You do not have permission to kill this server.", ephemeral: true });
+                            } else if (err === 504) {
+                                return await buttonInteraction.reply({ content: "The server is currently unreachable (504 Gateway Timeout). Please try again later.", ephemeral: true });
+                            }
+                            console.error("Error killing server:", err);
+                            return await buttonInteraction.reply({ content: "An unknown error occurred while killing the server.", ephemeral: true });
+                        }
+                    }
+
                     // 🔄 REFRESH BUTTON
                     case refreshButtonId: {
                         try {
 
                             //make sure websocket is still open otherwise consider the server offline
                             if (!ws || ws.readyState !== WebSocket.OPEN) {
-                                serverResourceUsage.current_state = "offline";
+                                serverResourceUsage.current_state = "unknown";
                             }
 
                             await updateAllEmbedFields(embed, serverDetails, serverResourceUsage, logBuffer);
-                            await buttonInteraction.update({ embeds: [embed] });
+                            const newActionRows = handleButtonToggle(buttons, serverResourceUsage.current_state);
+                            await buttonInteraction.update({ embeds: [embed] , components: newActionRows });
                             liveUpdateInterval.refresh(); // reset interval timer
                         } catch (err) {
                             console.error("Error refreshing server info:", err);
@@ -331,6 +401,14 @@ async function serverManageEmbed(interaction, serverId) {
                         }
                         break;
                     }
+
+                    // 🚫 END SESSION BUTTON
+                    case endSessionButtonId: {
+                        buttonInteraction.reply({ content: "Ending session...", ephemeral: true });
+                        embed.setDescription(`**Server ID:** \`${serverDetails.identifier}\`\n** Session ended by user: <t:${Math.floor(Date.now() / 1000)}:R>**`);
+                        collector.stop("user_ended");
+                        return;
+                    }
                 
                     default:
                         return buttonInteraction.reply({ content: "Unknown action.", ephemeral: true });
@@ -346,7 +424,7 @@ async function serverManageEmbed(interaction, serverId) {
 
         collector.on("end", (collected, reason) => {
             clearInterval(liveUpdateInterval);
-            //console.log("Collector ended because:", reason);
+            console.log("Collector ended because:", reason);
 
             // Close websocket safely
             try {
@@ -354,17 +432,19 @@ async function serverManageEmbed(interaction, serverId) {
             } catch (err) {
                 console.error("Failed closing websocket:", err);
             }
-            // Disable buttons (all except panel link)
-            const disabledButtons1 = buttons.slice(0, 3).map(btn => ButtonBuilder.from(btn).setDisabled(true));
-            const disabledButtons2 = buttons.slice(3, 5).map(btn => ButtonBuilder.from(btn).setDisabled(true));
-            disabledButtons2[1] = ButtonBuilder.from(buttons[4]).setDisabled(false);
-            const disabledButtons3 = buttons.slice(5, 7).map(btn => ButtonBuilder.from(btn).setDisabled(true));
-            const disabledRow1 = new ActionRowBuilder().addComponents(disabledButtons1);
-            const disabledRow2 = new ActionRowBuilder().addComponents(disabledButtons2);
-            const disabledRow3 = new ActionRowBuilder().addComponents(disabledButtons3);
-            
-            interaction.editReply({ content: "Session ended. Please run the command again or go to the web panel to manage your server.", components: [disabledRow1, disabledRow2, disabledRow3] });
-            
+
+            //delete log message if exists
+            if (currentLogMessage && !currentLogMessage.deleted) {
+                currentLogMessage.delete().catch(() => { });
+            }
+
+
+            // Disable buttons (all but links get disabled)
+            const disabledButtonRows = handleButtonToggle(buttons, serverResourceUsage.current_state, true);
+            interaction.editReply({ content: "Session ended. Please run the command again or go to the web panel to manage your server.", components: disabledButtonRows, embeds: [embed] });
+            activeSessions.delete(interaction.user.id);
+
+
         });
 
     } catch (error) {
@@ -401,7 +481,7 @@ async function updateAllEmbedFields(embed, serverDetails, serverResourceUsage, l
     updateEmbedField(embed, "Network Up", `> 📤  ${formatBytes(serverResourceUsage.resources.network_tx_bytes)}`);
     updateEmbedField(embed, "Network Down", `> 📥  ${formatBytes(serverResourceUsage.resources.network_rx_bytes)}`);
     //add recent logs
-    updateEmbedField(embed, "Console", logBuffer.length === 0 ? "\`\`\`N/A\`\`\`" : `\`\`\`\n${embedConsoleStr(logBuffer)}\n\`\`\``);
+    updateEmbedField(embed, "Console", logBuffer.length === 0 ? "\`\`\`N/A\`\`\`" : `\`\`\`${embedConsoleStr(stripAnsi(logBuffer), 3, 512)}\`\`\``);
     embed.setTimestamp();
 }
 
@@ -420,4 +500,41 @@ async function createCommandModal(userId, serverId) {
     const firstActionRow = new ActionRowBuilder().addComponents(commandInput);
     modal.addComponents(firstActionRow);
     return modal;
+}
+
+function handleButtonToggle(buttons, serverStatus, disableAll) {
+    if (disableAll) {
+        //disable all buttons except panel link
+        buttons.forEach(button => {
+            if (button.data.style === ButtonStyle.Link) { //dont disable links by default since they should always be usable
+                button.setDisabled(false);
+            } else {
+                button.setDisabled(true);
+            }
+        });
+
+    } else {
+        //enable/disable certain buttons based on server status
+        buttons.forEach(button => {
+            if (button.data.custom_id?.startsWith("restart_server_")) {
+                button.setDisabled(serverStatus === "starting" || serverStatus === "stopping");
+                if (serverStatus === "running") {
+                    button.setLabel("Restart 🔄");
+                } else {
+                    button.setLabel("Start ▶️");
+                }
+            } else if (button.data.custom_id?.startsWith("stop_server_")) {
+                button.setDisabled(serverStatus !== "running");
+            } else if (button.data.custom_id?.startsWith("kill_server_")) { //only if status is stopping
+                button.setDisabled(serverStatus !== "stopping");
+            } else if (button.data.custom_id?.startsWith("send_command_")) {
+                button.setDisabled(serverStatus !== "running");
+            }
+        });
+    }
+    //return new action rows
+    const actionRow1 = new ActionRowBuilder().addComponents(buttons.slice(0, 4));
+    const actionRow2 = new ActionRowBuilder().addComponents(buttons.slice(4, 6));
+    const actionRow3 = new ActionRowBuilder().addComponents(buttons.slice(6, 9));
+    return [actionRow1, actionRow2, actionRow3];
 }
