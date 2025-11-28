@@ -25,8 +25,7 @@ The bot includes a basic server management interface using Discord buttons and e
 - View server details (ID, Name, Status, Address, Uptime)
 - View SFTP details (username, password, port)
 - WebSocket-powered updates to avoid any rate limits while providing real-time info
-- Disable old sessions automatically when user starts a new one or after 60 seconds of inactivity
-- Only one active session per user
+- Disable old sessions automatically when user starts a new one or after a period of inactivity
 - Any user with a linked API key can manage their own servers
 
 ![Main Server Manager](.images/server-manager.png)
@@ -105,6 +104,7 @@ Supports:
      API_ENCRYPTION_KEY: A secure random string for encrypting user API keys
      MANAGER_EMBED_UPDATE_INTERVAL: Seconds between resource usage updates in the server manager (uses websockets so discord rate limits are the main concern here)
      SERVER_STATUS_UPDATE_INTERVAL: Seconds between server status embed updates
+     SERVER_MANAGER_TIMEOUT: Seconds of inactivity before automatically closing the server manager session/websocket
      ENABLE_SERVER_STATUS_CONSOLE_LOGS: Globally toggle console logs on server status embeds (requires an apiKey with server.read permissions to access wings api)
      NODE_STATUS_UPDATE_INTERVAL: Seconds between node status embed updates
      ERROR_LOGGING_ENABLED: Enable or disable extra error logging to the console for debugging purposes (You probably want this false if you're not a developer or do not have an api key set)
