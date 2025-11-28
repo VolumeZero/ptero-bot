@@ -26,21 +26,22 @@ module.exports = {
                 process.exit(1);
             }
 
-            updateServerStatusEmbeds(client, pterodactyl.SERVER_STATUS_UPDATE_INTERVAL);
 
             const appKeyVaild = await isApplicationKeyValid();
             if (appKeyVaild) {
+                console.log(`✅ Sucessfully authenticated with the Pterodactyl application API for ${pterodactyl.domain}.`);
                 updateNodeStatusEmbeds(client, pterodactyl.NODE_STATUS_UPDATE_INTERVAL);
-                console.log(`✅ Sucessfully authenticated with the pterodactyl application API for ${pterodactyl.domain}.`);
                 client.pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, pterodactyl.apiKey);
             } else {
-                console.warn("⚠️ The pterodactyl API key is invalid. Node status embeds will not be updated. Server status logs will also not function.");
+                console.warn("⚠️ The Pterodactyl application API key is invalid. Node status embeds will not be updated. Some other features also may not work...");
             }
+            
+            updateServerStatusEmbeds(client, pterodactyl.SERVER_STATUS_UPDATE_INTERVAL);
 
-            console.log(`✅ Ready and logged in as ${client.user.tag}`);
             const gitHubUrl = "https://github.com/VolumeZero/ptero-bot";
             console.log(`🔗 Report any issues on: ${gitHubUrl}`);
 
+            console.log(`✅ Ready and logged in as ${client.user.tag}`);
             updatePresence(client); 
             setInterval(() => updatePresence(client), 10 * 60 * 1000); // Update presence every 15 minutes
         } catch (error) {
