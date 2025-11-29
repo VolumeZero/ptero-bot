@@ -1,10 +1,10 @@
 
 const { getHttpStatusIcon } = require("../../utils/httpStatusIcon");
+const axios = require("axios");
+const { pterodactyl } = require("../../config.json");
 
 //vaidate the pterodactyl panel url by making a request to the api and checking the response
 async function validatePanelUrl() {
-    const axios = require("axios");
-    const { pterodactyl } = require("../../config.json");
     try {
         console.log(`🌐 Validating Pterodactyl panel URL: ${pterodactyl.domain}`);
         const response = await axios.get(`${pterodactyl.domain}`, {
