@@ -29,7 +29,7 @@ module.exports = {
                         players: response.data.vars.Players,
                         maxPlayers: response.data.vars.sv_maxClients,
                         version: response.data.server.match(/v[\d.]+/)?.[0],
-                        joinLink: `http://${ip}:${port}`
+                        joinLink: `http://${ip}:${port}` //a fivem server will redirect to its cfx.re/join link when accessed via browser
                     };
                 }
                 return null;
