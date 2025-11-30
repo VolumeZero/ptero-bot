@@ -5,6 +5,7 @@ const { getServerExtras } = require("./getServerExtras");
 const { PteroWings } = require("../requests/wingsApiReq");
 const { PteroClient } = require("../requests/clientApiReq");
 const { PteroApp } = require("../requests/appApiReq");
+const fs = require("fs");
 
 module.exports = {
     async createNodeStatusEmbed(nodeId) {
@@ -110,7 +111,7 @@ module.exports = {
         return embed;
     },
 
-    async createServerStatusEmbed(serverId, clientApiKey, iconUrl, enableLogs) {
+    async createServerStatusEmbed(serverId, clientApiKey, iconUrl, enableLogs, gameType = null) {
         const serverInfoResponse = await PteroClient.request(`servers/${serverId}`, clientApiKey);
         const serverDetails = serverInfoResponse.attributes;
         
@@ -138,7 +139,7 @@ module.exports = {
         const defaultAllocation = serverDetails.relationships.allocations.data.find(alloc => alloc.attributes.is_default);
         const ip = defaultAllocation.attributes.ip_alias || defaultAllocation.attributes.ip;
         const port = defaultAllocation.attributes.port;
-        const extras = await getServerExtras(ip, port);
+        const extras = await getServerExtras(ip, port, gameType);
         let latestLogs = null;
 
         if (pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs) {
@@ -213,6 +214,27 @@ module.exports = {
         }
         if (extras && extras.joinLink !== undefined) {
             embed.setURL(extras.joinLink);
+        }
+
+        if (extras && extras.type !== undefined && gameType === null) {
+            //add the type to the saved embed data
+            let dataDir = "./ptero/data";
+            if (!fs.existsSync(dataDir)){
+                console.log("Data directory not found, creating...");
+                fs.mkdirSync(dataDir, { recursive: true });
+            }
+            let statusMessages = [];
+            try {
+                statusMessages = JSON.parse(fs.readFileSync("./ptero/data/statusMessages.json"));
+            } catch (error) {
+                console.warn("Could not load existing status messages, creating new file.");
+                fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
+            }
+            const msgInfo = statusMessages.find(msg => msg.serverId === serverId);
+            if (msgInfo) {
+                msgInfo.serverType = extras.type;
+                fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
+            }
         }
         return embed;
     },

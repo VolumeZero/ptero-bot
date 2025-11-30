@@ -2,89 +2,86 @@ const fs = require("fs");
 const { loadApiKey } = require("../keys");
 const { createServerStatusEmbed } = require('./embeds');
 const { pterodactyl } = require("../../config.json");
-const { PteroClient } = require("../requests/clientApiReq");
 
 module.exports = {
     updateServerStatusEmbeds: async function (client, seconds) {
-
+        let numOfEmbeds = 0;
         const updateEmbeds = async () => {
+            let time = new Date()
             let dataDir = "./ptero/data";
             if (!fs.existsSync(dataDir)){
                 console.log("Data directory not found, creating...");
                 fs.mkdirSync(dataDir, { recursive: true });
             }
+            const filePath = "./ptero/data/statusMessages.json";
 
             let statusMessages = [];
             try {
-                statusMessages = JSON.parse(fs.readFileSync("./ptero/data/statusMessages.json"));
+                statusMessages = JSON.parse(fs.readFileSync(filePath));
             } catch (error) {
                 console.warn("Could not load existing status messages, creating new file.");
-                fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
+                fs.writeFileSync(filePath, JSON.stringify(statusMessages, null, 4));
             }
 
-            for (const msgInfo of statusMessages) {
-                try {                   
+            const tasks = statusMessages.map(async (msgInfo) => {
+                try {
                     const channel = await client.channels.fetch(msgInfo.channelId);
                     const message = await channel.messages.fetch(msgInfo.messageId).catch(() => null);
                     if (!message) {
-                        console.log(`Message ID ${msgInfo.messageId} not found in channel ID ${msgInfo.channelId}, removing...`);
-                        //remove from statusMessages array
                         const index = statusMessages.indexOf(msgInfo);
-                        if (index > -1) {
-                            statusMessages.splice(index, 1);
-                        }
-                        //save updated statusMessages array to json file
-                        fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
-                        continue;
+                        if (index > -1) statusMessages.splice(index, 1);
+                        fs.writeFileSync(filePath, JSON.stringify(statusMessages, null, 4));
+                        return;
                     }
-
+                
                     if (!msgInfo.userId) {
-                        console.log(`No user ID associated with message ID ${msgInfo.messageId}, cannot load API key, removing...`);
-                        //remove from statusMessages array
                         const index = statusMessages.indexOf(msgInfo);
-                        if (index > -1) {
-                            statusMessages.splice(index, 1);
-                        }
-                        //save updated statusMessages array to json file
-                        fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
-                        continue;
+                        if (index > -1) statusMessages.splice(index, 1);
+                        fs.writeFileSync(filePath, JSON.stringify(statusMessages, null, 4));
+                        return;
                     }
-
+                
                     const apiKey = await loadApiKey(msgInfo.userId);
                     if (!apiKey) {
-                        console.log(`No API key found for user ID ${msgInfo.userId}, skipping update for server ID  ${msgInfo.serverId} and removing embed from list...`);
-                        //remove from statusMessages array
                         const index = statusMessages.indexOf(msgInfo);
-                        if (index > -1) {
-                            statusMessages.splice(index, 1);
-                        }
-                        //save updated statusMessages array to json file
-                        fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
-                        continue;
-                    }  
-
-                    if (msgInfo.enableLogs === undefined) {
-                        msgInfo.enableLogs = false; //default to false for older embeds
-                        fs.writeFileSync("./ptero/data/statusMessages.json", JSON.stringify(statusMessages, null, 4));
+                        if (index > -1) statusMessages.splice(index, 1);
+                        fs.writeFileSync(filePath, JSON.stringify(statusMessages, null, 4));
+                        return;
                     }
-
-                    const embed = await createServerStatusEmbed(msgInfo.serverId, apiKey, msgInfo.iconUrl, msgInfo.enableLogs);
-                    
-                    await message.edit({ embeds: [embed] });
-
-                    //sleep for 200ms to avoid rate limits
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                } catch (error) {
+                
+                    if (msgInfo.enableLogs === undefined) {
+                        msgInfo.enableLogs = false;
+                        fs.writeFileSync(filePath, JSON.stringify(statusMessages, null, 4));
+                    }
+                
+                    const embed = await createServerStatusEmbed(
+                        msgInfo.serverId,
+                        apiKey,
+                        msgInfo.iconUrl,
+                        msgInfo.enableLogs,
+                        msgInfo.gameType
+                    );
+                
+                    message.edit({ embeds: [embed] });
+                    numOfEmbeds++;
+                
+                } catch (err) {
                     if (pterodactyl.ERROR_LOGGING_ENABLED) {
-                        console.error(`Error updating status embed for server ID ${msgInfo.serverId}:`, PteroClient.getErrorMessage(error));
+                        console.error(`Error updating embed for ${msgInfo.serverId}:`, err);
                     }
                 }
-            }
+            });
+            await Promise.all(tasks);
+
+            const msElapsed = new Date() - time;
+            //console.log(`🕒 Updated ${numOfEmbeds} server status embed(s) in ${msElapsed} ms.`);
+            numOfEmbeds = 0; //reset for next interval
         };
+
 
         // Run once immediately
         updateEmbeds();
-        console.log("⌛ Watching server status embeds to update every " + seconds + " seconds...");
+        console.log(`⌛ Watching server status embed(s) for updates every ${seconds} second(s)...`);
         // Then continue interval
         setInterval(updateEmbeds, seconds * 1000);
     }

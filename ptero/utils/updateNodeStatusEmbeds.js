@@ -1,52 +1,64 @@
 const fs = require("fs");
-const {createNodeStatusEmbed} = require("../utils/embeds");
-const { PteroApp } = require("../requests/appApiReq");
+const { createNodeStatusEmbed } = require("../utils/embeds");
 
 module.exports = {
     updateNodeStatusEmbeds: async function (client, seconds) {
+        let numOfEmbeds = 0;
+        const filePath = "./ptero/data/nodeStatusMessages.json";
+
         const updateEmbeds = async () => {
-            let dataDir = "./ptero/data";
-            if (!fs.existsSync(dataDir)){
-                console.log("Data directory not found, creating...");
-                fs.mkdirSync(dataDir, { recursive: true });
+            const start = Date.now();
+
+            // Ensure data directory exists
+            if (!fs.existsSync("./ptero/data")) {
+                fs.mkdirSync("./ptero/data", { recursive: true });
             }
 
+            // Load node messages from JSON
             let statusMessages = [];
             try {
-                statusMessages = JSON.parse(fs.readFileSync("./ptero/data/nodeStatusMessages.json"));
-            } catch (error) {
+                statusMessages = JSON.parse(fs.readFileSync(filePath));
+            } catch {
                 console.warn("Could not load existing node status messages, creating new file.");
-                fs.writeFileSync("./ptero/data/nodeStatusMessages.json", JSON.stringify(statusMessages, null, 4));
+                fs.writeFileSync(filePath, "[]");
             }
-            for (const msgInfo of statusMessages) {
+
+            // Create all update tasks
+            const tasks = statusMessages.map(async (msgInfo) => {
                 try {
                     const channel = await client.channels.fetch(msgInfo.channelId);
                     const message = await channel.messages.fetch(msgInfo.messageId).catch(() => null);
+
                     if (!message) {
-                        console.log(`Message ID ${msgInfo.messageId} not found in channel ID ${msgInfo.channelId}, removing...`);
-                        //remove from statusMessages array
-                        const index = statusMessages.indexOf(msgInfo);
-                        if (index > -1) {
-                            statusMessages.splice(index, 1);
-                        }
-                        //save updated statusMessages array to json file
-                        fs.writeFileSync("./ptero/data/nodeStatusMessages.json", JSON.stringify(statusMessages, null, 4));
-                        continue;
+                        // Remove missing messages
+                        statusMessages = statusMessages.filter(m => m !== msgInfo);
+                        fs.writeFileSync(filePath, JSON.stringify(statusMessages, null, 4));
+                        return;
                     }
-                    
+
                     const embed = await createNodeStatusEmbed(msgInfo.nodeId);
                     await message.edit({ embeds: [embed] });
-                    //sleep for 200ms to avoid rate limits
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                } catch (error) {
-                    console.error(`Error updating node status embed for node ID ${msgInfo.nodeId}:`, error);
+                    numOfEmbeds++;
+
+                    // Optional small delay to avoid Discord rate limits
+                    await new Promise(resolve => setTimeout(resolve, 20));
+
+                } catch (err) {
+                    console.error(`Error updating node ${msgInfo.nodeId}:`, err);
                 }
-            }
+            });
+
+            // Run all updates in parallel
+            await Promise.all(tasks);
+
+            //console.log(`🕒 Updated ${numOfEmbeds} node status embed(s) in ${Date.now() - start} ms.`);
+            numOfEmbeds = 0;
         };
-        console.log("⌛ Watching node status embeds to update every " + seconds + " seconds...");
+
         // Run once immediately
         updateEmbeds();
-        // Then run at the specified interval
+        console.log(`⌛ Watching node status embed(s) for updates every ${seconds} seconds...`);
+        // Then continue at the interval
         setInterval(updateEmbeds, seconds * 1000);
-    }   
+    }
 };
