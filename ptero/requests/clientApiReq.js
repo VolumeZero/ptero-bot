@@ -57,7 +57,7 @@ const PteroClient = {
                 message = "Bad Request: The server could not understand the request due to invalid syntax.";
                 break;
             case error.response && error.response.status === 401:
-                message = "Unauthorized: Your client API key is invalid. Please check your Client API Key in the config.json file.";
+                message = "Unauthorized: Your client API key is invalid. Please check that you have entered the correct Client API Key using the /pt key command.";
                 break;
             case error.response && error.response.status === 403:
                 message = "Forbidden: Your client API key does not have permission to access this resource.";
