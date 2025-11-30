@@ -1,6 +1,6 @@
 const { pterodactyl } = require("../../config.json");
-const { pteroClientReq } = require("../requests/clientApiReq");
-const { pteroAppReq } = require("../requests/appApiReq");
+const { PteroClient } = require("../requests/clientApiReq");
+const { PteroApp } = require("../requests/appApiReq");
 
 // Helper functions
 function serverPowerEmoji(status) {
@@ -105,7 +105,7 @@ async function isClientKeyValid(apiKey) {
         } else if (apiKey.startsWith('ptla_')) {
             return false;
         }
-        await pteroClientReq('account', apiKey);
+        await PteroClient.request('account', apiKey);
         return true;
     } catch (error) {
         return false;
@@ -118,9 +118,10 @@ async function isApplicationKeyValid() {
         if (!apiKey || apiKey.trim() === '') {
             return false;
         } else if (apiKey.startsWith('ptlc_')) { //client key prefix
+            console.warn(`Found a client API key (ptlc_) in the application API key field. Please ensure you are using an application API key (ptla_).`);
             return false;
         }
-        await pteroAppReq('nodes');
+        await PteroApp.request('nodes');
         return true;
     } catch (error) {
         return false;

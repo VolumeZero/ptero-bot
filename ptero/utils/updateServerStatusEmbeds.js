@@ -1,6 +1,6 @@
 const fs = require("fs");
 const { loadApiKey } = require("../keys");
-const { getErrorMessage } = require("./clientErrors");
+const { PteroClient } = require("../requests/clientApiReq");
 const { createServerStatusEmbed } = require('./embeds');
 
 module.exports = {
@@ -74,7 +74,7 @@ module.exports = {
                     //sleep for 200ms to avoid rate limits
                     await new Promise(resolve => setTimeout(resolve, 200));
                 } catch (error) {
-                    console.error(`Error updating status embed for server ID ${msgInfo.serverId}:`, getErrorMessage(error));
+                    console.error(`Error updating status embed for server ID ${msgInfo.serverId}:`, error);
                 }
             }
         };

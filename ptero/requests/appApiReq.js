@@ -1,8 +1,8 @@
 const axios = require("axios");
 const { pterodactyl } = require("../../config.json");
 
-module.exports = { 
-    async pteroAppReq(apiEndpoint, method = 'get', data = null) {
+const PteroApp = {
+    async request(apiEndpoint, method = 'get', data = null) {
         try {
             const url = `${pterodactyl.domain}/api/application/${apiEndpoint}`;
             const headers = {
@@ -20,13 +20,14 @@ module.exports = {
             return response.data;
         } catch (error) {
             if (pterodactyl.ERROR_LOGGING_ENABLED) {
-                console.error(`Error making Pterodactyl API request to ${apiEndpoint}:`, await this.getPteroApplicationError(error));
+                console.error(`Error making Pterodactyl API request to application/${apiEndpoint}:`, error);
             }
             throw error;
         }
     },
-    async getPteroApplicationError(error) {
-        let message = "An unknown error occurred.";
+
+    getErrorMessage(error) {
+        let message = "An unknown error occurred while making an application API request.";
         switch (true) {
             case error.response && error.response.status === 400:
                 message = "Bad Request: The server could not understand the request due to invalid syntax.";
@@ -61,4 +62,5 @@ module.exports = {
         }   
         return message;
     }
-}
+};
+module.exports = { PteroApp };

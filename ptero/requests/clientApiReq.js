@@ -1,10 +1,8 @@
 const axios = require('axios');
 const { pterodactyl } = require("../../config.json");
 
-
-
-module.exports = { 
-    async pteroClientReq(apiEndpoint, clientApiKey, method = 'get', data = null) {
+const PteroClient = { 
+    async request(apiEndpoint, clientApiKey, method = 'get', data = null) {
         try {
             const url = `${pterodactyl.domain}/api/client/${apiEndpoint}`;
             const headers = { 
@@ -22,13 +20,14 @@ module.exports = {
             return response.data;
         } catch (error) {
             if (pterodactyl.ERROR_LOGGING_ENABLED) {
-                console.error(`Error making Pterodactyl API request to ${apiEndpoint}:`, await this.getPteroError(error));
+                console.error(`Error making Pterodactyl API request to client/${apiEndpoint}:`, error);
             }
             throw error;
         }
     },
-    async getPteroError(error) {
-        let message = "An unknown error occurred.";
+
+    getErrorMessage(error) {
+        let message = "An unknown error occurred while making a client API request.";
         switch (true) {
             case error.response && error.response.status === 400:
                 message = "Bad Request: The server could not understand the request due to invalid syntax.";
@@ -37,7 +36,7 @@ module.exports = {
                 message = "Unauthorized: Your client API key is invalid. Please check your Client API Key in the config.json file.";
                 break;
             case error.response && error.response.status === 403:
-                message = "Forbidden: Your client API key does not have permission to access this resource. Please check the permissions for your Client API Key in the Pterodactyl admin panel.";
+                message = "Forbidden: Your client API key does not have permission to access this resource.";
                 break;
             case error.response && error.response.status === 404:
                 message = "Not Found: The requested resource was not found.";
@@ -65,5 +64,7 @@ module.exports = {
     }
 
 }
+
+module.exports = { PteroClient };
 
 

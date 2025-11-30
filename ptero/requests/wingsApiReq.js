@@ -1,8 +1,8 @@
 const axios = require('axios');
 const { pterodactyl } = require('../../config.json');
 
-module.exports = {
-    async wingsApiReq(nodeDetails, nodeToken, apiEndpoint, method = 'get', data = null) {
+const PteroWings = {
+    async request(apiEndpoint, nodeDetails, nodeToken, method = 'get', data = null) {
         try {
             const url = `${nodeDetails.scheme}://${nodeDetails.fqdn}:${nodeDetails.daemon_listen}/api/${apiEndpoint}`;
             const headers = {
@@ -20,13 +20,13 @@ module.exports = {
             return response.data;
         } catch (error) {
             if (pterodactyl.ERROR_LOGGING_ENABLED) {
-                console.error(`Error making Wings API request to ${apiEndpoint} on node ${nodeDetails.name}:`, await this.getWingsError(error));
+                console.error(`Error making Wings API request to ${apiEndpoint} on node ${nodeDetails.name}:`, error);
             }
             throw error;
         }
     },
-    async getWingsError(error) {
-        let message = "An unknown error occurred.";
+    getErrorMessage(error) {
+        let message = "An unknown error occurred while making a Wings API request.";
         switch (true) {
             case error.response && error.response.status === 400:
                 message = "Bad Request: The server could not understand the request due to invalid syntax.";
@@ -59,8 +59,10 @@ module.exports = {
                 message = "Connection Timed Out: The request to the Wings node timed out or the node is offline. Please check the network connection and try again.";
                 break;
             default:
-                message = `Unexpected Error: ${error.message} while communicating with the Wings node...`;
+                message = `Unexpected Error: ${error.message} while communicating with the Wings node api endpoint.`;
         }
         return message;
     }
 };
+
+module.exports = { PteroWings };

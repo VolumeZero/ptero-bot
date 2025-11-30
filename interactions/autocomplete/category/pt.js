@@ -1,6 +1,7 @@
-const Nodeactyl = require('nodeactyl');
-const { pterodactyl } = require("../../../config.json");
+const { owner } = require("../../../config.json");
 const { loadApiKey } = require("../../../ptero/keys");
+const { PteroClient } = require("../../../ptero/requests/clientApiReq");
+const { PteroApp } = require("../../../ptero/requests/appApiReq");
 
 module.exports = {
     name: "pt",
@@ -16,9 +17,7 @@ module.exports = {
             const clientApiKey = await loadApiKey(interaction.user.id);
             if (!clientApiKey) return interaction.respond([]);
 
-            const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
-
-            const serversResponse = await pteroClient.getAllServers().catch(() => null);
+            const serversResponse = await PteroClient.request('', clientApiKey).catch(() => null);
             if (!serversResponse || !serversResponse.data) return interaction.respond([]);
 
             const servers = serversResponse.data;
@@ -36,9 +35,7 @@ module.exports = {
            const clientApiKey = await loadApiKey(interaction.user.id);
             if (!clientApiKey) return interaction.respond([]);
 
-            const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
-
-            const serversResponse = await pteroClient.getAllServers().catch(() => null);
+            const serversResponse = await PteroClient.request('', clientApiKey).catch(() => null);
             if (!serversResponse || !serversResponse.data) return interaction.respond([]);
 
             const servers = serversResponse.data;
@@ -52,11 +49,10 @@ module.exports = {
 
             return interaction.respond(filtered);
         } else if (sub === "node-embed") {
+            //if not owner return empty
+            if (interaction.user.id !== owner) return interaction.respond([]);
 
-            const appApiKey = pterodactyl.apiKey;
-            const pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, appApiKey);
-
-            const nodes = await pteroApp.getAllNodes().catch(() => null);
+            const nodes = await PteroApp.request('nodes').catch(() => null);
             if (!nodes || !nodes.data) return interaction.respond([]);
 
             const filtered = nodes.data

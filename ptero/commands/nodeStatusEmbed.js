@@ -1,17 +1,15 @@
-const Nodeactyl = require("nodeactyl");
 const { pterodactyl } = require("../../config.json");
 const fs = require("fs");
 const { createNodeStatusEmbed } = require("../utils/embeds");
+const { PteroApp } = require("../requests/appApiReq");
 
 module.exports = {
     async sendNodeStatusEmbed(interaction, nodeId) {
         //defer 
         await interaction.deferReply({ ephemeral: true });
 
-        const appApiKey = pterodactyl.apiKey;
-        const pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, appApiKey);
-
-        const nodeDetails = await pteroApp.getNodeDetails(nodeId);
+        const nodeDetailsResponse = await PteroApp.request(`nodes/${nodeId}`);
+        const nodeDetails = nodeDetailsResponse ? nodeDetailsResponse.attributes : null;
         if (!nodeDetails) {
             return interaction.reply({
                 content: "Could not retrieve node details. Please ensure the node ID is correct.",

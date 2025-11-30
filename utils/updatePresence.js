@@ -1,7 +1,6 @@
 const { ActivityType } = require("discord.js");
-const Nodeactyl = require("nodeactyl");
 const { pterodactyl } = require("../config.json");
-const { getAppErrorMessage } = require("../ptero/utils/appErrors");
+const { PteroApp } = require("../ptero/requests/appApiReq");
 const { isApplicationKeyValid } = require("../ptero/utils/serverUtils");
 const fs = require("fs");
 
@@ -9,8 +8,7 @@ async function updatePresence(client) {
     try {
         const appKeyVaild = await isApplicationKeyValid(pterodactyl.apiKey);
         if (appKeyVaild) {
-            const pteroApp = client.pteroApp
-            const servers = await pteroApp.getAllServers();
+            const servers = await PteroApp.request('servers');
             const totalServers = servers.data.length || `0`;
             await client.user.setActivity(`${totalServers} servers on ${pterodactyl.company}`, {
                 type: ActivityType.Watching
@@ -39,7 +37,7 @@ async function updatePresence(client) {
         }
 
     } catch (error) {
-        console.error("Error updating presence:", getAppErrorMessage(error));
+        console.error("Error updating presence:", PteroApp.getErrorMessage(error));
     }
 
 }

@@ -1,6 +1,5 @@
-
-const Nodeactyl = require("nodeactyl");
 const { pterodactyl } = require("../../config.json");
+const { PteroClient } = require("../requests/clientApiReq");
 const { loadApiKey } = require("../keys");
 const fs = require("fs");
 const { createServerStatusEmbed } = require("../utils/embeds");
@@ -16,8 +15,8 @@ async function sendServerStatusEmbed(interaction, serverId, iconUrl, enableLogs)
             ephemeral: true,
         });
     }
-    const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
-    const serverDetails = await pteroClient.getServerDetails(serverId);
+    const serverDetailsResponse = await PteroClient.request(`servers/${serverId}`, clientApiKey).catch(() => null);
+    const serverDetails = serverDetailsResponse ? serverDetailsResponse.attributes : null;
     if (!serverDetails) {
         return interaction.reply({
             content: "Could not retrieve server details. Please ensure the server ID is correct and your API key has access to this server.",

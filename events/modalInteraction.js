@@ -6,10 +6,9 @@
  */
 
 const { InteractionType } = require("discord-api-types/v10");
-const Nodeactyl = require('nodeactyl');
-const { getErrorMessage } = require("../ptero/utils/clientErrors");
 const { loadApiKey } = require("../ptero/keys");
 const { pterodactyl } = require("../config.json");
+const { PteroClient } = require("../ptero/requests/clientApiReq");
 
 module.exports = {
 	name: "interactionCreate",
@@ -48,15 +47,19 @@ module.exports = {
 
 	    	try {
 				const apiKey = await loadApiKey(interaction.user.id);
-				const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, apiKey);
-	    	    await pteroClient.sendServerCommand(serverId, command);
+	    	    await PteroClient.request(`servers/${serverId}/command`, apiKey, 'post', {
+	    	        command: command
+	    	    });
 	    	    await interaction.reply({
 	    	        content: `Command \`${command}\` sent to server. Check the console for more details.`,
 	    	        ephemeral: true
 	    	    });
 	    	} catch (err) {
+				if (pterodactyl.ERROR_LOGGING_ENABLED) {
+					console.error(`Error sending command to server ID ${serverId}:`, err);
+				}
 	    	    await interaction.reply({
-	    	        content: `Failed to send command: \`${getErrorMessage(err)}\``,
+	    	        content: `Failed to send command: \`${PteroClient.getErrorMessage(err)}\``,
 	    	        ephemeral: true
 	    	    });
 			

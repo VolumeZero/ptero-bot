@@ -3,13 +3,11 @@
     
 const { EmbedBuilder } = require('discord.js');
 const { pterodactyl } = require("../../config.json");
-const  Nodeactyl  = require('nodeactyl');
-
+const { PteroClient } = require("../requests/clientApiReq");
 
 async function listServers(interaction, clientApiKey) {
     try {
-		const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
-		const servers = await pteroClient.getAllServers();
+		const servers = await PteroClient.request('', clientApiKey) || { data: [] }; 
     	if (servers.length === 0) {
     		return interaction.reply({
     			content: "You have no servers associated with your account.",
@@ -37,27 +35,8 @@ async function listServers(interaction, clientApiKey) {
     	}
     } catch (error) {
     	console.error("Error fetching servers:", error);
-    	let message = "There was an error fetching your servers.";
-    	if (error?.response?.status) {
-    	    switch (error.response.status) {
-    	        case 401:
-    	            message += " Your API key is invalid.";
-    	            break;
-    	        case 403:
-    	            message += " Your API key does not have permission to access the API.";
-    	            break;
-    	        case 404:
-    	            message += " The requested resource was not found.";
-    	            break;
-    	        default:
-    	            message += ` HTTP status code: ${error.response.status}`;
-    	    }
-    	} else if (error?.code) {
-    	    message += ` Error code: ${error.code}`;
-    	} else if (error?.message) {
-    	    message += ` ${error.message}`;
-    	}
-
+    	let message = `An error occurred while fetching your servers: ${PteroClient.getErrorMessage(error)}`;
+    	
     	return interaction.reply({
     	    content: message,
     	    flags: 64, // ephemeral

@@ -8,7 +8,6 @@ const { pterodactyl } = require("../config.json");
 const { updatePresence } = require("../utils/updatePresence");
 const { isApplicationKeyValid } = require("../ptero/utils/serverUtils");
 const { validatePanelUrl } = require("../ptero/utils/validatePanelUrl");
-const Nodeactyl = require("nodeactyl");
 
 module.exports = {
     
@@ -31,7 +30,6 @@ module.exports = {
             if (appKeyVaild) {
                 console.log(`✅ Sucessfully authenticated with the Pterodactyl application API for ${pterodactyl.domain}.`);
                 updateNodeStatusEmbeds(client, pterodactyl.NODE_STATUS_UPDATE_INTERVAL);
-                client.pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, pterodactyl.apiKey);
             } else {
                 console.warn("⚠️ The Pterodactyl application API key is invalid. Node status embeds will not be updated. Some other features also may not work...");
             }

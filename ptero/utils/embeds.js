@@ -1,36 +1,29 @@
-const Nodeactyl = require("nodeactyl");
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder } = require("discord.js");
 const { pterodactyl } = require("../../config.json");
 const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, embedColorFromWingsStatus, stripAnsi, isApplicationKeyValid } = require("./serverUtils");
 const { getServerExtras } = require("./getServerExtras");
-const { getAppErrorMessage } = require("./appErrors");
-const { wingsApiReq, getWingsError } = require("../requests/wingsApiReq");
-const { getErrorMessage } = require("./clientErrors");
+const { PteroWings } = require("../requests/wingsApiReq");
+const { PteroClient } = require("../requests/clientApiReq");
+const { PteroApp } = require("../requests/appApiReq");
 
 module.exports = {
     async createNodeStatusEmbed(nodeId) {
-        const appApiKey = pterodactyl.apiKey;
-        const pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, appApiKey);
-
-        const nodeDetails = await pteroApp.getNodeDetails(nodeId).catch((error) => {
-            console.error(`Error fetching node details for node ID ${nodeId}:`, getAppErrorMessage(error));
-            throw new Error(`Failed to fetch node details: ${error}`);
-        });
-
         
-        const nodeConfig = await pteroApp.getNodeConfig(nodeId);
-        const locationDetails = await pteroApp.getLocationDetails(nodeDetails.location_id);
-        const nodeAllocations = await pteroApp.getNodeAllocations(nodeId);
-        const allocationCount = nodeAllocations.data.length;
+        const nodeDetailsResponse = await PteroApp.request(`nodes/${nodeId}`, 'get', {include: 'location,allocations,servers'});
+        const nodeDetails = nodeDetailsResponse.attributes;
+        const nodeConfigResponse = await PteroApp.request(`nodes/${nodeId}/configuration`);
+        const nodeConfig = nodeConfigResponse;
+        const allocationCount = nodeDetails.relationships.allocations.data.length || 0;
+        const locationDetails = nodeDetails.relationships.location.attributes;
         
         //get server details from wings api since it provides the most info about servers (including logs even when the server is offline)
         let servers = [];
         let wingsSuccess = false;
         try {
-            servers = await wingsApiReq(nodeDetails, nodeConfig.token, 'servers');
+            servers = await PteroWings.request('servers', nodeDetails, nodeConfig.token);
             wingsSuccess = true;
         } catch (error) {
-            console.warn(`Could not fetch servers from Wings for node with ID ${nodeId} : ${await getWingsError(error)} You can delete the status embed if you wish to stop seeing this message.`);
+            console.warn(`Could not fetch servers from Wings for node with ID ${nodeId} : ${PteroWings.getErrorMessage(error)} You can delete the status embed if you wish to stop seeing this message.`);
             // Continue with empty servers array
             wingsSuccess = false; //was not able to fetch wings 
         }
@@ -71,9 +64,9 @@ module.exports = {
 
         let wingsInfo;
         if (wingsSuccess) {
-            wingsInfo = await wingsApiReq(nodeDetails, nodeConfig.token, 'system').catch((error) => {
+            wingsInfo = await PteroWings.request('system', nodeDetails, nodeConfig.token).catch((error) => {
                 if (pterodactyl.ERROR_LOGGING_ENABLED) {
-                    console.error(`Error fetching wings system info for node ID ${nodeId}:`, getAppErrorMessage(error));
+                    console.error(`Error fetching wings system info for node ID ${nodeId}:`, PteroApp.getErrorMessage(error));
                 }
                 return null; //treat as offline
             });
@@ -118,16 +111,16 @@ module.exports = {
     },
 
     async createServerStatusEmbed(serverId, clientApiKey, iconUrl, enableLogs) {
-        const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
-        const serverDetails = await pteroClient.getServerDetails(serverId);
+        const serverInfoRespone = await PteroClient.request(`servers/${serverId}`, clientApiKey);
+        const serverDetails = serverInfoRespone.attributes;
         
         let serverResourceUsage = null;
-        
         try {
-            serverResourceUsage = await pteroClient.getServerUsages(serverId);
+            const resourceResponse = await PteroClient.request(`servers/${serverDetails.uuid}/resources`, clientApiKey);
+            serverResourceUsage = resourceResponse.attributes;
         } catch (error) {
             if (pterodactyl.ERROR_LOGGING_ENABLED) {
-                console.warn(`Could not fetch server usage for ${serverId} :  ${getErrorMessage(error)} The node may be offline or unreachable.`);
+                console.warn(`Could not fetch server usage for ${serverId} :  ${PteroClient.getErrorMessage(error)} The node may be offline or unreachable.`);
             }
             // Set default offline values
             serverResourceUsage = {
@@ -149,23 +142,25 @@ module.exports = {
         let latestLogs = null;
 
         if (pterodactyl.ENABLE_SERVER_STATUS_CONSOLE_LOGS && enableLogs) {
-            const isAppKeyValid = await isApplicationKeyValid(pterodactyl.apiKey);
+            const isAppKeyValid = await isApplicationKeyValid();
             if (!isAppKeyValid) {
                 console.warn("The Pterodactyl application API key is invalid. Cannot fetch server logs for status embed for server ID:", serverId);
                 return;
             }
             //try and get the logs using an api request to wings (need an appliction api key with server.read permission) This will be optional so users without an api key can still use the bot
-            const pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, pterodactyl.apiKey);
-            const nodes = await pteroApp.getAllNodes();
+            //const pteroApp = new Nodeactyl.NodeactylApplication(pterodactyl.domain, pterodactyl.apiKey);
+            const nodes = await PteroApp.request('nodes').catch((error) => {
+                console.warn(`Error fetching nodes to get logs for server status embed (ID): ${serverId}:`, PteroApp.getErrorMessage(error));
+            });
             if (nodes !== undefined && nodes.data !== undefined) { 
                 const node = nodes.data.find(n => n.attributes.fqdn === ip);
                 if (node) {
-                    const nodeConfig = await pteroApp.getNodeConfig(node.attributes.id).catch((error) => {
-                        console.warn(`Error fetching node config for node ID ${node.attributes.id}:`, getAppErrorMessage(error));
+                    const nodeConfig = await PteroApp.request(`nodes/${node.attributes.id}/configuration`).catch((error) => {
+                        console.warn(`Error fetching node config to get logs for server status embed (ID): ${serverId}:`, PteroApp.getErrorMessage(error));
                     });
                     if (nodeConfig) {
-                        const wingsLogs = await wingsApiReq(node.attributes, nodeConfig.token, `servers/${serverDetails.uuid}/logs?size=3`).catch((error) => {
-                            console.warn(`Error fetching logs for server ID ${serverId} from wings:`, getAppErrorMessage(error));
+                        const wingsLogs = await PteroWings.request(`servers/${serverDetails.uuid}/logs?size=3`, node.attributes, nodeConfig.token).catch((error) => {
+                            console.warn(`Error fetching logs for server ID ${serverId} from wings:`, PteroApp.getErrorMessage(error));
                         });
                         if (wingsLogs?.data) {
                             latestLogs = wingsLogs.data
@@ -225,9 +220,10 @@ module.exports = {
 
     async createAccountDetailsEmbed(userId, clientApiKey) {
         try {
-            const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
-            const userInfo = await pteroClient.getAccountDetails();
-            const servers = await pteroClient.getAllServers();
+            const userInfoResponse = await PteroClient.request('account', clientApiKey);
+            const userInfo = userInfoResponse.attributes;
+            const serversResponse = await PteroClient.request('', clientApiKey); //servers is for some reason the root endpoint
+            const servers = serversResponse;
             let totalAllocatedResources = {
                 memory: 0,
                 disk: 0,
@@ -264,7 +260,7 @@ module.exports = {
             return { embed, components: [actionRow]  };
 
         } catch (error) {
-            console.error(`Error creating account details embed for user ID ${userId}:`, getAppErrorMessage(error));
+            console.error(`Error creating account details embed for user ID ${userId}:`, PteroClient.getErrorMessage(error));
             throw new Error(`Failed to create account details embed: ${error}`);
         }
     }

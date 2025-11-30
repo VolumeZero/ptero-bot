@@ -1,9 +1,8 @@
-const Nodeactyl = require("nodeactyl");
 const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require("discord.js");
 const { pterodactyl } = require("../../config.json");
 const { loadApiKey } = require("../keys");
 const { WebSocket } = require("ws");
-const { getErrorMessage } = require("../utils/clientErrors");
+const { PteroClient } = require("../requests/clientApiReq");
 const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, stripAnsi, embedConsoleStr } = require("../utils/serverUtils");
 
 
@@ -21,25 +20,35 @@ async function serverManageEmbed(interaction, serverId) {
             activeSessions.delete(interaction.user.id);
         }
 
-
         const clientApiKey = await loadApiKey(interaction.user.id);
-        const pteroClient = new Nodeactyl.NodeactylClient(pterodactyl.domain, clientApiKey);
-        const serverDetails = await pteroClient.getServerDetails(serverId).catch((err) => {
-            const errorMessage = getErrorMessage(err);
-            interaction.editReply({ content: `Error fetching server details: ${errorMessage}`});
-            return null;
+        const serverDetailsResponse = await PteroClient.request(`servers/${serverId}`, clientApiKey, 'get', {include: 'allocations'}).catch(() => null);
+        const serverDetails = serverDetailsResponse ? serverDetailsResponse.attributes : null;
+        if (!serverDetails) return interaction.followUp({ 
+            content: "Could not retrieve server details. Please ensure the server ID is correct and your API key has access to this server.",
+            ephemeral: true,
         });
-        if (!serverDetails) return; // already handled above
 
-        let serverResourceUsage = await pteroClient.getServerUsages(serverId);
-        const serverPowerState = await pteroClient.getServerStatus(serverId);
-        const userInfo = await pteroClient.getAccountDetails();
+        const serverUsageResponse = await PteroClient.request(`servers/${serverId}/resources`, clientApiKey).catch(() => null);
+        let serverResourceUsage = serverUsageResponse ? serverUsageResponse.attributes : null;
+        if (!serverResourceUsage) {
+            return interaction.followUp({
+                content: "Could not retrieve server resource usage. Please try again later.",
+                ephemeral: true,
+            });
+        }
+        const serverPowerState = serverResourceUsage.current_state;
+        const userInfoResponse = await PteroClient.request('account', clientApiKey);
+        const userInfo = userInfoResponse.attributes;
         const defaultAllocation = serverDetails.relationships.allocations.data.find(alloc => alloc.attributes.is_default);
-        //console.log(serverDetails);
-        //console.log(serverResourceUsage);
-        //console.log(userInfo);
 
-        const wsData = await pteroClient.getConsoleWebSocket(serverId);
+        const wsRequestData = await PteroClient.request(`servers/${serverId}/websocket`, clientApiKey).catch(() => null);
+        const wsData = wsRequestData ? wsRequestData.data : null;
+        if (!wsData) {
+            return interaction.followUp({
+                content: "Could not retrieve WebSocket connection data. Please try again later.",
+                ephemeral: true,
+            });
+        }
 
         // Setup websocket and log buffer
         const ws = new WebSocket(wsData.socket, {
@@ -457,7 +466,7 @@ async function serverManageEmbed(interaction, serverId) {
                 content: "The Wings node for this server is currently unreachable (504 Gateway Timeout). Please try again later or contact your server provider.",
             });
         }
-        console.error("Error fetching server details for server manage embed:", getErrorMessage(error));
+        console.error("Error fetching server details for server manage embed:", error);
         return interaction.editReply({
             content: "There was an unexpected error fetching server details. Please try again later.",
         });
