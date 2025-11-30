@@ -16,7 +16,8 @@
 		"NODE_STATUS_UPDATE_INTERVAL": 300,
 		"EMBED_FOOTER_ICON_URL": "https://p7.hiclipart.com/preview/978/71/779/pterodactyls-pteranodon-minecraft-pterosaurs-computer-servers-minecraft.jpg",
 		"EMBED_FOOTER_TEXT": "Powered by Pterodactyl",
-		"ERROR_LOGGING_ENABLED": false
+		"ERROR_LOGGING_ENABLED": false,
+		"LOG_HTTP_WARNINGS": true
 	}
 
 }

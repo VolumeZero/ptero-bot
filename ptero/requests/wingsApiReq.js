@@ -4,6 +4,9 @@ const { pterodactyl } = require('../../config.json');
 const PteroWings = {
     async request(apiEndpoint, nodeDetails, nodeToken, method = 'get', data = null) {
         try {
+            if (nodeDetails.scheme !== 'https' && pterodactyl.LOG_HTTP_WARNINGS) {
+                console.warn(`⚠️ Warning: You are making a Wings API request to node ${nodeDetails.name} over an unsecure HTTP connection. This is not recommended for production environments. \n(If you are running the node on the same machine or network as the panel, you may ignore this warning and can disable it in the config.json by setting "LOG_HTTP_WARNINGS" to false.)`);
+            }
             const url = `${nodeDetails.scheme}://${nodeDetails.fqdn}:${nodeDetails.daemon_listen}/api/${apiEndpoint}`;
             const headers = {
                 'Authorization': `Bearer ${nodeToken}`,

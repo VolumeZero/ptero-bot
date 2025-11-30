@@ -7,6 +7,9 @@ const { pterodactyl } = require("../../config.json");
 async function validatePanelUrl() {
     try {
         console.log(`🌐 Validating Pterodactyl panel URL: ${pterodactyl.domain}`);
+        if (pterodactyl.domain.startsWith('http://')) { //always warn about this since its only on start up
+            console.warn(`⚠️ Warning: You are using an unsecure HTTP connection for the Pterodactyl panel URL. This is not recommended for production environments. Please consider using HTTPS to secure your connection.\n(If you are running the panel on the same machine as the bot, you may ignore this warning.)`);
+        }
         const response = await axios.get(`${pterodactyl.domain}`, {
             headers: {
                 'Accept': 'Application/vnd.pterodactyl.v1+json',

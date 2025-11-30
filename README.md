@@ -108,6 +108,7 @@ Supports:
      ENABLE_SERVER_STATUS_CONSOLE_LOGS: Globally toggle console logs on server status embeds (requires an apiKey with server.read permissions to access wings api)
      NODE_STATUS_UPDATE_INTERVAL: Seconds between node status embed updates
      ERROR_LOGGING_ENABLED: Enable or disable extra error logging to the console for debugging purposes (You probably want this false if you're not a developer or do not have an api key set)
+     LOG_HTTP_WARNINGS: Enable or disable warnings when making wings requests over unsecure HTTP connections (leave this on unless you are hosting everything locally and understand the risks of using HTTP)
   ```
 
 - ▶️ Invite the Bot to Your Server
