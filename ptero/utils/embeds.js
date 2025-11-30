@@ -111,18 +111,16 @@ module.exports = {
         const serverDetails = await pteroClient.getServerDetails(serverId);
         
         let serverResourceUsage = null;
-        let serverPowerState = "offline";
         
         try {
             serverResourceUsage = await pteroClient.getServerUsages(serverId);
-            serverPowerState = serverResourceUsage.current_state;
         } catch (error) {
             if (pterodactyl.ERROR_LOGGING_ENABLED) {
                 console.warn(`Could not fetch server usage for ${serverId} :  ${getErrorMessage(error)} The node may be offline or unreachable.`);
             }
             // Set default offline values
             serverResourceUsage = {
-                current_state: "offline",
+                current_state: "unknown",
                 resources: {
                     cpu_absolute: 0,
                     memory_bytes: 0,
@@ -132,6 +130,7 @@ module.exports = {
             };
         }
         
+        const serverPowerState = serverResourceUsage.current_state || "unknown";        
         const defaultAllocation = serverDetails.relationships.allocations.data.find(alloc => alloc.attributes.is_default);
         const ip = defaultAllocation.attributes.ip_alias || defaultAllocation.attributes.ip;
         const port = defaultAllocation.attributes.port;
