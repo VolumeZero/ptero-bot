@@ -1,8 +1,9 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const { listServers } = require("../../../ptero/commands/listServers");
 const { saveApiKey, loadApiKey } = require("../../../ptero/keys");
 const { serverManageEmbed } = require("../../../ptero/commands/serverManageEmbed");
 const { sendServerStatusEmbed } = require("../../../ptero/commands/serverStatusEmbed");
+const { createAccountDetailsEmbed } = require("../../../ptero/utils/embeds");
 const { sendNodeStatusEmbed } = require("../../../ptero/commands/nodeStatusEmbed");
 const { isClientKeyValid, isApplicationKeyValid } = require("../../../ptero/utils/serverUtils");
 const { pterodactyl } = require("../../../config.json");
@@ -111,18 +112,18 @@ module.exports = {
             if (!isKeyValid) {
                 if (apiKey === pterodactyl.apiKey) {
                     return interaction.editReply({
-                        content: `You cannot use the bot's API key as your personal key. Please generate your own API key from your Pterodactyl account at ${pterodactyl.domain}/account/api.`,
+                        content: `You cannot use the bot's API key as your personal key. Please generate your own API key from your Pterodactyl account [here](${pterodactyl.domain}/account/api).`,
                         ephemeral: true,
                     });
                 } else if (apiKey.startsWith('ptla_')) {
                     return interaction.editReply({
-                        content: "Application API keys are not supported. Please use a client API key generated from your Pterodactyl account.",
+                        content: `Application API keys are not supported. Please use a client API key generated from your Pterodactyl account [here](${pterodactyl.domain}/account/api).`,
                         ephemeral: true,
                     });
                 }
 
                 return interaction.editReply({
-                    content: "The provided API key is invalid. Please double-check and try again.",
+                    content: `Could not authenticate to the panel with the provided API key. Please ensure you have entered a valid Client API Key generated from your Pterodactyl account [here](${pterodactyl.domain}/account/api).`,
                     ephemeral: true,
                 });
             }
@@ -134,7 +135,7 @@ module.exports = {
             });
 
         } else if (subcommand === "manage") {
-            const serverId = interaction.options.getString("server_name");
+            const serverId = interaction.options.getString("server_name"); //our autofill provides the short server ID as the value from the option
             if (!clientApiKey) {
     	    	return interaction.reply({
     	    		content: "You have not set your API key yet. Please use `/pt key` to set it.",
@@ -176,7 +177,7 @@ module.exports = {
             try {
                 const iconUrl = interaction.options.getString("icon_url");
                 const enableLogs = interaction.options.getBoolean("enable_logs") || false;
-                await sendServerStatusEmbed(interaction, serverId, iconUrl, enableLogs); //will be bot owner only and use application api
+                await sendServerStatusEmbed(interaction, serverId, iconUrl, enableLogs);
             } catch (error) {
                 console.error("Error in server-embed command:", error);
                 return interaction.followUp({
@@ -228,7 +229,6 @@ module.exports = {
     	    } 
 
             try {
-                const { createAccountDetailsEmbed } = require("../../../ptero/utils/embeds");
                 const accountEmbedData = await createAccountDetailsEmbed(interaction.user.id, clientApiKey);
                 return interaction.reply({
                     embeds: [accountEmbedData.embed],
