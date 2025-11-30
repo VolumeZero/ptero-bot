@@ -106,29 +106,29 @@ module.exports = {
 
         } else if (subcommand === "key") {
             const apiKey = interaction.options.getString("api_key");
-            interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ ephemeral: true });
             const isKeyValid = await isClientKeyValid(apiKey);
             if (!isKeyValid) {
                 if (apiKey === pterodactyl.apiKey) {
-                    return interaction.reply({
+                    return interaction.editReply({
                         content: `You cannot use the bot's API key as your personal key. Please generate your own API key from your Pterodactyl account at ${pterodactyl.domain}/account/api.`,
                         ephemeral: true,
                     });
                 } else if (apiKey.startsWith('ptla_')) {
-                    return interaction.reply({
+                    return interaction.editReply({
                         content: "Application API keys are not supported. Please use a client API key generated from your Pterodactyl account.",
                         ephemeral: true,
                     });
                 }
 
-                return interaction.reply({
+                return interaction.editReply({
                     content: "The provided API key is invalid. Please double-check and try again.",
                     ephemeral: true,
                 });
             }
 
             await saveApiKey(interaction.user.id, apiKey);
-            return interaction.reply({
+            return interaction.editReply({
                 content: "Your API key has been saved!",
                 ephemeral: true,
             });
