@@ -111,8 +111,8 @@ module.exports = {
     },
 
     async createServerStatusEmbed(serverId, clientApiKey, iconUrl, enableLogs) {
-        const serverInfoRespone = await PteroClient.request(`servers/${serverId}`, clientApiKey);
-        const serverDetails = serverInfoRespone.attributes;
+        const serverInfoResponse = await PteroClient.request(`servers/${serverId}`, clientApiKey);
+        const serverDetails = serverInfoResponse.attributes;
         
         let serverResourceUsage = null;
         try {
