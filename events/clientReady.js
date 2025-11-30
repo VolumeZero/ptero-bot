@@ -28,7 +28,7 @@ module.exports = {
 
             const appKeyVaild = await isApplicationKeyValid();
             if (appKeyVaild) {
-                console.log(`✅ Sucessfully authenticated with the Pterodactyl application API for ${pterodactyl.domain}.`);
+                console.log(`✅ Sucessfully authenticated with the Pterodactyl application API for ${pterodactyl.domain}`);
                 updateNodeStatusEmbeds(client, pterodactyl.NODE_STATUS_UPDATE_INTERVAL);
             } else {
                 console.warn("⚠️ The Pterodactyl application API key is invalid. Node status embeds will not be updated. Some other features also may not work...");
