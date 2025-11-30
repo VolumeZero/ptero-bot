@@ -25,11 +25,14 @@ module.exports = {
         
         //get server details from wings api since it provides the most info about servers (including logs even when the server is offline)
         let servers = [];
+        let wingsSuccess = false;
         try {
             servers = await wingsApiReq(nodeDetails, nodeConfig.token, 'servers');
+            wingsSuccess = true;
         } catch (error) {
             console.warn(`Could not fetch servers from Wings for node with ID ${nodeId} : ${await getWingsError(error)} You can delete the status embed if you wish to stop seeing this message.`);
             // Continue with empty servers array
+            wingsSuccess = false; //was not able to fetch wings 
         }
 
         const nodeUsages = { 
@@ -65,12 +68,20 @@ module.exports = {
             console.warn(`Warning: One or more server usages could not be fetched for node ${nodeId}. The node usages may be incomplete or inaccurate. You can safely ignore this message if you wish to continue using partial data for the node embed.`);
         }
 
-        const wingsInfo = await wingsApiReq(nodeDetails, nodeConfig.token, 'system').catch((error) => {
-            if (pterodactyl.ERROR_LOGGING_ENABLED) {
-                console.error(`Error fetching wings system info for node ID ${nodeId}:`, getAppErrorMessage(error));
-            }
-            return null; //treat as offline
-        });
+
+        let wingsInfo;
+        if (wingsSuccess) {
+            wingsInfo = await wingsApiReq(nodeDetails, nodeConfig.token, 'system').catch((error) => {
+                if (pterodactyl.ERROR_LOGGING_ENABLED) {
+                    console.error(`Error fetching wings system info for node ID ${nodeId}:`, getAppErrorMessage(error));
+                }
+                return null; //treat as offline
+            });
+        } else {
+            wingsInfo = null;
+        }
+
+
         const nodeStatus = wingsInfo ? "online" : "offline";
         const statusIcon = nodeStatus === "online" ? "🟢 Online" : "🔴 Offline";
 
@@ -129,7 +140,7 @@ module.exports = {
                 }
             };
         }
-        
+
         const serverPowerState = serverResourceUsage.current_state || "unknown";        
         const defaultAllocation = serverDetails.relationships.allocations.data.find(alloc => alloc.attributes.is_default);
         const ip = defaultAllocation.attributes.ip_alias || defaultAllocation.attributes.ip;
