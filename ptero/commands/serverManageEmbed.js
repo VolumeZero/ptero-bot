@@ -318,66 +318,66 @@ async function serverManageEmbed(interaction, serverId) {
                     case restartServerButtonId: {
                         try {
                             const startType = serverResourceUsage.current_state === "running" ? "restarting" : "starting";
-                            const success = await pteroClient.restartServer(serverId);
+                            const response = await PteroClient.sendPowerSignal(serverId, clientApiKey, 'restart');
                             updateEmbedField(embed, "Status", `\`\`\`${serverPowerEmoji(serverResourceUsage.current_state)}\`\`\`` ?? "N/A");
-                            if (success) {
+                            if (response < 400) {
                                 return await buttonInteraction.reply({ content: `Server is ${startType}...`, ephemeral: true });
+                            } else if (response == 403) {
+                                return await buttonInteraction.reply({ content: "You do not have permission to restart this server.", ephemeral: true });
+                            } else if (response == 504) {
+                                return await buttonInteraction.reply({ content: "The server is currently unreachable (504 Gateway Timeout). Please try again later.", ephemeral: true });
                             } else {
-                                return await buttonInteraction.reply({ content: "Failed to restart the server.", ephemeral: true });
+                                return await buttonInteraction.reply({ content: `Failed to ${startType} the server.`, ephemeral: true });
                             }
                         } catch (err) {
-                            //if 403 error, insufficient permissions
-                            if (err === 403) {
-                                return await buttonInteraction.reply({ content: "You do not have permission to restart this server.", ephemeral: true });
-                            } else if (err === 504) {
-                                return await buttonInteraction.reply({ content: "The server is currently unreachable (504 Gateway Timeout). Please try again later.", ephemeral: true });
+                            if (pterodactyl.ERROR_LOGGING_ENABLED) {
+                                console.error("Error restarting server:", err);
                             }
-                            console.error("Error restarting server:", err);
-                            return await buttonInteraction.reply({ content: "An unknown error occurred while restarting the server.", ephemeral: true });
+                            return await buttonInteraction.reply({ content: `An error occurred while restarting the server: ${PteroClient.getErrorMessage(err)}`, ephemeral: true });
                         }
                     }
 
                     // ⏹️ STOP SERVER BUTTON
                     case stopServerButtonId: {
                         try {
-                            const success = await pteroClient.stopServer(serverId);
+                            const response = await PteroClient.sendPowerSignal(serverId, clientApiKey, 'stop');
                             updateEmbedField(embed, "Status", `\`\`\`${serverPowerEmoji(serverResourceUsage.current_state)}\`\`\`` ?? "N/A");
-                            if (success) {
+                            if (response < 400) {
                                 return await buttonInteraction.reply({ content: "Server is stopping...", ephemeral: true });
+                            } else if (response == 403) {
+                                return await buttonInteraction.reply({ content: "You do not have permission to stop this server.", ephemeral: true });
+                            } else if (response == 504) {
+                                return await buttonInteraction.reply({ content: "The server is currently unreachable (504 Gateway Timeout). Please try again later.", ephemeral: true });
                             } else {
                                 return await buttonInteraction.reply({ content: "Failed to stop the server.", ephemeral: true });
                             }
                         } catch (err) {
-                            //if 403 error, insufficient permissions
-                            if (err === 403) {
-                                return await buttonInteraction.reply({ content: "You do not have permission to stop this server.", ephemeral: true });
-                            } else if (err === 504) {
-                                return await buttonInteraction.reply({ content: "The server is currently unreachable (504 Gateway Timeout). Please try again later.", ephemeral: true });
+                            if (pterodactyl.ERROR_LOGGING_ENABLED) {
+                                console.error("Error stopping server:", err);
                             }
-                            console.error("Error stopping server:", err);
-                            return await buttonInteraction.reply({ content: "An unknown error occurred while stopping the server.", ephemeral: true });
+                            return await buttonInteraction.reply({ content: `An error occurred while stopping the server: ${PteroClient.getErrorMessage(err)}`, ephemeral: true });
                         }
                     }
 
                     // ❌ KILL SERVER BUTTON
                     case killServerButtonId: {
                         try {
-                            const success = await pteroClient.killServer(serverId);
+                            const response = await PteroClient.sendPowerSignal(serverId, clientApiKey, 'kill');
                             updateEmbedField(embed, "Status", `\`\`\`${serverPowerEmoji(serverResourceUsage.current_state)}\`\`\`` ?? "N/A");
-                            if (success) {
-                                return await buttonInteraction.reply({ content: "Server killed...", ephemeral: true });
+                            if (response < 400) {
+                                return await buttonInteraction.reply({ content: "Server is being killed...", ephemeral: true });
+                            } else if (response == 403) {
+                                return await buttonInteraction.reply({ content: "You do not have permission to kill this server.", ephemeral: true });
+                            } else if (response == 504) {
+                                return await buttonInteraction.reply({ content: "The server is currently unreachable (504 Gateway Timeout). Please try again later.", ephemeral: true });
                             } else {
                                 return await buttonInteraction.reply({ content: "Failed to kill the server.", ephemeral: true });
                             }
                         } catch (err) {
-                            //if 403 error, insufficient permissions
-                            if (err === 403) {
-                                return await buttonInteraction.reply({ content: "You do not have permission to kill this server.", ephemeral: true });
-                            } else if (err === 504) {
-                                return await buttonInteraction.reply({ content: "The server is currently unreachable (504 Gateway Timeout). Please try again later.", ephemeral: true });
+                            if (pterodactyl.ERROR_LOGGING_ENABLED) {
+                                console.error("Error killing server:", err);
                             }
-                            console.error("Error killing server:", err);
-                            return await buttonInteraction.reply({ content: "An unknown error occurred while killing the server.", ephemeral: true });
+                            return await buttonInteraction.reply({ content: `An error occurred while killing the server: ${PteroClient.getErrorMessage(err)}`, ephemeral: true });
                         }
                     }
 

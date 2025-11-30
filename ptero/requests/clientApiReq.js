@@ -20,7 +20,31 @@ const PteroClient = {
             return response.data;
         } catch (error) {
             if (pterodactyl.ERROR_LOGGING_ENABLED) {
-                console.error(`Error making Pterodactyl API request to client/${apiEndpoint}:`, error);
+                console.error(`Error making Pterodactyl API request to client/${apiEndpoint}:`, this.getErrorMessage(error) || error);
+            }
+            throw error;
+        }
+    },
+
+    async sendPowerSignal(serverId, clientApiKey, signal) {
+        try {
+            const url = `${pterodactyl.domain}/api/client/servers/${serverId}/power`;
+            const headers = {
+                'Authorization': `Bearer ${clientApiKey}`,
+                'Accept': 'Application/vnd.pterodactyl.v1+json',
+                'Content-Type': 'application/json'
+            };
+            const options = {
+                method: 'post', 
+                url: url,
+                headers: headers,
+                data: { signal: signal }
+            };
+            const response = await axios(options);
+            return response.data;
+        } catch (error) {
+            if (pterodactyl.ERROR_LOGGING_ENABLED) {
+                console.error(`Error sending power signal to server ${serverId}:`, error);
             }
             throw error;
         }
