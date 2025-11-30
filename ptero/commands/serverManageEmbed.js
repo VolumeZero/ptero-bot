@@ -202,7 +202,10 @@ async function serverManageEmbed(interaction, serverId) {
         // Set up live update interval
         let lastSentLogs = "";
         let liveUpdateInterval = setInterval(async () => {
-            if (!ws || ws.readyState !== WebSocket.OPEN) return console.warn(`WebSocket not open, skipping live update for server manager embed for server: ${serverId}`);
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                serverResourceUsage.current_state = "unknown";
+                collector.stop("websocket_closed");
+            }
 
             try {
                 
@@ -441,6 +444,7 @@ async function serverManageEmbed(interaction, serverId) {
 
             // Disable buttons (all but links get disabled)
             const disabledButtonRows = handleButtonToggle(buttons, serverResourceUsage.current_state, true);
+            embed.setDescription(`**Server ID:** \`${serverDetails.identifier}\`\n** Session ended:** <t:${Math.floor(Date.now() / 1000)}:R>`);
             interaction.editReply({ content: "Session ended. Please run the command again or go to the web panel to manage your server.", components: disabledButtonRows, embeds: [embed] });
             activeSessions.delete(interaction.user.id);
 
