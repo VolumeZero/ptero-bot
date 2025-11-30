@@ -1,7 +1,8 @@
 const fs = require("fs");
 const { loadApiKey } = require("../keys");
-const { PteroClient } = require("../requests/clientApiReq");
 const { createServerStatusEmbed } = require('./embeds');
+const { pterodactyl } = require("../../config.json");
+const { PteroClient } = require("../requests/clientApiReq");
 
 module.exports = {
     updateServerStatusEmbeds: async function (client, seconds) {
@@ -74,7 +75,9 @@ module.exports = {
                     //sleep for 200ms to avoid rate limits
                     await new Promise(resolve => setTimeout(resolve, 200));
                 } catch (error) {
-                    console.error(`Error updating status embed for server ID ${msgInfo.serverId}:`, error);
+                    if (pterodactyl.ERROR_LOGGING_ENABLED) {
+                        console.error(`Error updating status embed for server ID ${msgInfo.serverId}:`, PteroClient.getErrorMessage(error));
+                    }
                 }
             }
         };
