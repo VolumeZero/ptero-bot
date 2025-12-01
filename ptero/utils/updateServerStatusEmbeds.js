@@ -59,7 +59,7 @@ module.exports = {
                         apiKey,
                         msgInfo.iconUrl,
                         msgInfo.enableLogs,
-                        msgInfo.gameType
+                        msgInfo.serverType
                     );
                 
                     message.edit({ embeds: [embed] });
