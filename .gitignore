@@ -109,6 +109,8 @@ dist
 # TernJS port file
 .tern-port
 
+.prettierrc
+
 apiKeys.json
 apiKeys.txt
 ptero/data/*.json
