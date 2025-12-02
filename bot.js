@@ -7,6 +7,8 @@
 
 // Declare constants which will be used throughout the bot.
 
+//test
+
 const fs = require("fs");
 const {
 	Client,
