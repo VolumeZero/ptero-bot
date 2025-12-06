@@ -17,7 +17,8 @@ const PteroWings = {
                 method: method,
                 url: url,
                 headers: headers,
-                data: data
+                data: data,
+                timeout: pterodactyl.WINGS_API_TIMEOUT || 2500
             };
             const response = await axios(options);
             return response.data;
