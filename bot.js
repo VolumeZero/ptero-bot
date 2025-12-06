@@ -13,6 +13,7 @@ const {
 	Collection,
 	GatewayIntentBits,
 	Partials,
+	Options,
 } = require("discord.js");
 const { REST } = require("@discordjs/rest");
 const { Routes } = require("discord-api-types/v9");
@@ -33,6 +34,9 @@ const client = new Client({
 		GatewayIntentBits.MessageContent,
 	],
 	partials: [Partials.Channel],
+	makeCache: Options.cacheWithLimits({
+        MessageManager: 100 //last 100 messages per channel
+    })
 });
 
 /**********************************************************************/
