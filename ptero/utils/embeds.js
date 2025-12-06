@@ -9,24 +9,32 @@ const fs = require("fs");
 
 module.exports = {
     async createNodeStatusEmbed(nodeId) {
-        
-        const nodeDetailsResponse = await PteroApp.request(`nodes/${nodeId}`, 'get', {include: 'location,allocations,servers'});
+        const [nodeDetailsResponse, nodeConfigResponse] = await Promise.all([
+            PteroApp.request(`nodes/${nodeId}`, 'get', {include: 'location,allocations,servers'}),
+            PteroApp.request(`nodes/${nodeId}/configuration`)
+        ]);
+        if (!nodeDetailsResponse || !nodeConfigResponse) {
+            //console.warn(`Could not fetch node details or configuration for node with ID ${nodeId}.`);
+        }
         const nodeDetails = nodeDetailsResponse.attributes;
-        const nodeConfigResponse = await PteroApp.request(`nodes/${nodeId}/configuration`);
         const nodeConfig = nodeConfigResponse;
         const allocationCount = nodeDetails.relationships.allocations.data.length || 0;
         const locationDetails = nodeDetails.relationships.location.attributes;
         
         //get server details from wings api since it provides the most info about servers (including logs even when the server is offline)
         let servers = [];
-        let wingsSuccess = false;
+        let wingsInfo = null;
         try {
-            servers = await PteroWings.request('servers', nodeDetails, nodeConfig.token);
-            wingsSuccess = true;
+            const wingsData = await Promise.all([
+                PteroWings.request('servers', nodeDetails, nodeConfig.token),
+                PteroWings.request('system', nodeDetails, nodeConfig.token)
+            ]);
+            servers = wingsData[0];
+            wingsInfo = wingsData[1];
         } catch (error) {
-            console.warn(`Could not fetch servers from Wings for node with ID ${nodeId} : ${PteroWings.getErrorMessage(error)} You can delete the status embed if you wish to stop seeing this message.`);
-            // Continue with empty servers array
-            wingsSuccess = false; //was not able to fetch wings 
+            console.warn(`Could not fetch data from Wings for node with ID ${nodeId} : ${PteroWings.getErrorMessage(error)} You can delete the status embed if you wish to stop seeing this message.`);
+            servers = [];
+            wingsInfo = null;
         }
 
         const nodeUsages = { 
@@ -61,20 +69,6 @@ module.exports = {
         if (err) {
             console.warn(`Warning: One or more server usages could not be fetched for node ${nodeId}. The node usages may be incomplete or inaccurate. You can safely ignore this message if you wish to continue using partial data for the node embed.`);
         }
-
-
-        let wingsInfo;
-        if (wingsSuccess) {
-            wingsInfo = await PteroWings.request('system', nodeDetails, nodeConfig.token).catch((error) => {
-                if (pterodactyl.ERROR_LOGGING_ENABLED) {
-                    console.error(`Error fetching wings system info for node ID ${nodeId}:`, PteroApp.getErrorMessage(error));
-                }
-                return null; //treat as offline
-            });
-        } else {
-            wingsInfo = null;
-        }
-
 
         const nodeStatus = wingsInfo ? "online" : "offline";
         const statusIcon = nodeStatus === "online" ? "🟢 Online" : "🔴 Offline";
