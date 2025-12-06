@@ -5,9 +5,7 @@ const { pterodactyl } = require("../../config.json");
 
 module.exports = {
     updateServerStatusEmbeds: async function (client, seconds) {
-        let numOfEmbeds = 0;
         const updateEmbeds = async () => {
-            let time = new Date()
             let dataDir = "./ptero/data";
             if (!fs.existsSync(dataDir)){
                 console.log("Data directory not found, creating...");
@@ -24,9 +22,10 @@ module.exports = {
             }
 
             const tasks = statusMessages.map(async (msgInfo) => {
+                const taskStart = Date.now();   
                 try {
-                    const channel = await client.channels.fetch(msgInfo.channelId);
-                    const message = await channel.messages.fetch(msgInfo.messageId).catch(() => null);
+                    const channel = await client.channels.fetch(msgInfo.channelId, { cache: true });
+                    const message = channel.messages.cache.get(msgInfo.messageId) || await channel.messages.fetch(msgInfo.messageId, { cache: true });
                     if (!message) {
                         const index = statusMessages.indexOf(msgInfo);
                         if (index > -1) statusMessages.splice(index, 1);
@@ -62,7 +61,7 @@ module.exports = {
                         msgInfo.serverType
                     );
                 
-                    message.edit({ embeds: [embed] });
+                    await message.edit({ embeds: [embed] });
                     numOfEmbeds++;
                 
                 } catch (err) {
@@ -70,20 +69,26 @@ module.exports = {
                         console.error(`Error updating embed for ${msgInfo.serverId}:`, err);
                     }
                 }
-            });
-            await Promise.all(tasks);
 
-            const msElapsed = new Date() - time;
-            //console.log(`🕒 Updated ${numOfEmbeds} server status embed(s) in ${msElapsed} ms.`);
-            numOfEmbeds = 0; //reset for next interval
+                return Date.now() - taskStart;
+            });
+            
+            const results = await Promise.all(tasks);
+            const validTimes = results.filter(ms => typeof ms === "number");
+            const avgTime = validTimes.reduce((a, b) => a + b, 0) / validTimes.length;
+
+            //console.log(`🕒 Updated ${validTimes.length} server embeds | Avg: ${avgTime.toFixed(1)} ms`);
         };
 
 
         // Run once immediately
-        updateEmbeds();
+        await updateEmbeds();
         console.log(`⌛ Watching server status embed(s) for updates every ${seconds} second(s)...`);
         // Then continue interval
-        setInterval(updateEmbeds, seconds * 1000);
+        if (this._statusInterval) clearInterval(this._statusInterval);
+
+        this._statusInterval = setInterval(updateEmbeds, seconds * 1000);
+
     }
 };
 
