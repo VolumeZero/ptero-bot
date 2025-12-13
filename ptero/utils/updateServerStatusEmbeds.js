@@ -45,6 +45,7 @@ module.exports = {
                         const index = statusMessages.indexOf(msgInfo);
                         if (index > -1) statusMessages.splice(index, 1);
                         fs.writeFileSync(filePath, JSON.stringify(statusMessages, null, 4));
+                        console.warn(`API key for user ${msgInfo.userId} not found. Removing server status embed from json for server ${msgInfo.serverId}.`);
                         return;
                     }
                 
@@ -62,7 +63,6 @@ module.exports = {
                     );
                 
                     await message.edit({ embeds: [embed] });
-                    numOfEmbeds++;
                 
                 } catch (err) {
                     if (pterodactyl.ERROR_LOGGING_ENABLED) {
