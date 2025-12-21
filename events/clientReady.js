@@ -17,7 +17,7 @@ module.exports = {
     async execute(client) {
 
         try {
-            console.log(`🐦 Initiating Ptero-Bot...`);
+            console.log(`🐦 Initiating Ptero-Bot v${client.version}...`);
             const isPanelUrlValid = await validatePanelUrl();
             if (!isPanelUrlValid) {
                 console.error(`❌ The Pterodactyl panel URL (${pterodactyl.domain}) is invalid. Please check the URL in the config.json file and ensure the panel is online and reachable from the internet.`);

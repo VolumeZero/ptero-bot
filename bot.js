@@ -39,6 +39,9 @@ const client = new Client({
     })
 });
 
+client.version = "0.3.0";
+
+
 /**********************************************************************/
 // Below we will be making an event handler!
 
