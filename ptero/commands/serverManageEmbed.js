@@ -53,7 +53,7 @@ async function serverManageEmbed(interaction, serverId) {
         // Setup websocket and log buffer
         const ws = new WebSocket(wsData.socket, {
             origin: pterodactyl.domain,
-            headers: { "User-Agent": "Nodeactyl/1.0" },
+            headers: { "User-Agent": "Ptero-Bot/1.0" },
         });
 
 
