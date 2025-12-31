@@ -11,11 +11,25 @@ module.exports = {
         const nodeDetailsResponse = await PteroApp.request(`nodes/${nodeId}`);
         const nodeDetails = nodeDetailsResponse ? nodeDetailsResponse.attributes : null;
         if (!nodeDetails) {
-            return interaction.reply({
+            return interaction.followUp({
                 content: "Could not retrieve node details. Please ensure the node ID is correct.",
                 ephemeral: true,
             });
+        } else {
+            switch (true) {
+                case nodeDetailsResponse.status === 404:
+                    return interaction.followUp({
+                        content: `Node with ID **${nodeId}** was not found. Please check the node ID and try again.`,
+                        ephemeral: true,
+                    });
+                case nodeDetailsResponse.status === 403:
+                    return interaction.followUp({
+                        content: `Access to node with ID **${nodeId}** is forbidden. Please ensure the application API key has the necessary permissions to access node details in the Pterodactyl admin panel.`,
+                        ephemeral: true,
+                    });
+            }
         }
+
         
         //remove existing embed message from channel if it exists
         let statusMessages = null;

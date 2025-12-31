@@ -25,7 +25,7 @@ module.exports = {
                 const taskStart = Date.now();   
                 try {
                     const channel = await client.channels.fetch(msgInfo.channelId, { cache: true });
-                    const message = channel.messages.cache.get(msgInfo.messageId) || await channel.messages.fetch(msgInfo.messageId, { cache: true });
+                    const message = await channel.messages.fetch(msgInfo.messageId, { cache: true });
                     if (!message) {
                         const index = statusMessages.indexOf(msgInfo);
                         if (index > -1) statusMessages.splice(index, 1);

@@ -15,6 +15,13 @@ module.exports = {
         ]);
         if (!nodeDetailsResponse || !nodeConfigResponse) {
             //console.warn(`Could not fetch node details or configuration for node with ID ${nodeId}.`);
+            //TODO: catch errors like missing permissions (403) and invalid node ID (404) and provide more specific messages
+        }
+        //console.log(nodeDetailsResponse);
+        //if status is 404 or 403 return null
+        if (nodeDetailsResponse.status === 404 || nodeDetailsResponse.status === 403) {
+            console.warn(`Could not fetch node details for node with ID ${nodeId}. Status code: ${nodeDetailsResponse.status}`);
+            return null;
         }
         const nodeDetails = nodeDetailsResponse.attributes;
         const nodeConfig = nodeConfigResponse;
