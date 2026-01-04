@@ -53,13 +53,16 @@ async function checkFiveM(ip, port, timeout) {
     }
 }
 
+
+let failedChecks = new Map();
 module.exports = {
     async getServerExtras(ip, port, gameType = null) {
         const timeout = 3000;
 
         let checks = [];
-
-        if (gameType === "minecraft-java") {
+        if (gameType === "none") {
+            return { type: "none" };
+        } else if (gameType === "minecraft-java") {
             checks.push(checkJava(ip, port, timeout));
         } else if (gameType === "minecraft-bedrock") {
             checks.push(checkBedrock(ip, port, timeout));
@@ -77,7 +80,18 @@ module.exports = {
                     if (result) resolve(result);
                 }).finally(() => {
                     settledCount++;
-                    if (settledCount === checks.length) resolve({}); // All done, no valid result
+                    if (settledCount === checks.length) {
+                        //cache failed check 
+                        const failedCount = failedChecks.get(`${ip}:${port}`) || 0;
+                        if (failedCount >= 5) {
+                            failedChecks.delete(`${ip}:${port}`);
+                            //set game type to 'none' to avoid future checks
+                            resolve({ type: "none" });
+                        } else {
+                            failedChecks.set(`${ip}:${port}`, failedCount + 1);
+                        }
+                        resolve({}); //all checks done, none succeeded
+                    }
                 });
             });
         });
