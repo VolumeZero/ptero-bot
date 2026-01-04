@@ -24,8 +24,14 @@ module.exports = {
             const tasks = statusMessages.map(async (msgInfo) => {
                 const taskStart = Date.now();   
                 try {
-                    const channel = await client.channels.fetch(msgInfo.channelId, { cache: true });
-                    const message = await channel.messages.fetch(msgInfo.messageId, { cache: true });
+                    const channel = await client.channels.fetch(msgInfo.channelId, { cache: true }).catch(() => console.warn(`⚠️ Channel ${msgInfo.channelId} not found. It may have been deleted.`));
+                    if (!channel) {
+                        const index = statusMessages.indexOf(msgInfo);
+                        if (index > -1) statusMessages.splice(index, 1);
+                        fs.writeFileSync(filePath, JSON.stringify(statusMessages, null, 4));
+                        return;
+                    }
+                    const message = await channel.messages.fetch(msgInfo.messageId, { cache: true }).catch(() => console.warn(`⚠️ Message for server ${msgInfo.serverId} not found in channel ${msgInfo.channelId}. It may have been deleted.`));
                     if (!message) {
                         const index = statusMessages.indexOf(msgInfo);
                         if (index > -1) statusMessages.splice(index, 1);

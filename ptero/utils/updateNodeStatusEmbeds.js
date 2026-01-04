@@ -33,6 +33,7 @@ module.exports = {
                             .catch(() => null);
 
                     if (!message) {
+                        console.warn(`⚠️ Message for node ${msgInfo.nodeId} not found in channel ${msgInfo.channelId}. It may have been deleted.`);
                         statusMessages = statusMessages.filter(m => m.messageId !== msgInfo.messageId);
                         fs.writeFileSync(filePath, JSON.stringify(statusMessages, null, 4));
                         return;
