@@ -1,5 +1,5 @@
 <h1 align="center">Welcome to Ptero-Bot 👋</h1>
-<p align="center"> <img alt="Version" src="https://img.shields.io/badge/version-v0.3.1-blue.svg" /> <img alt="Documentation" src="https://img.shields.io/badge/documentation-WIP-brightgreen.svg" /> <img alt="Maintenance" src="https://img.shields.io/badge/maintained-yes-green.svg" /> </p>
+<p align="center"> <img alt="Version" src="https://img.shields.io/badge/version-v0.3.2-blue.svg" /> <img alt="Documentation" src="https://img.shields.io/badge/documentation-WIP-brightgreen.svg" /> <img alt="Maintenance" src="https://img.shields.io/badge/maintained-yes-green.svg" /> </p>
 
 ## A Discord bot built for managing, monitoring, and interacting with Pterodactyl servers — all directly from Discord.
 
