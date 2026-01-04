@@ -218,6 +218,11 @@ module.exports = {
         }
 
         if (extras && extras.type !== undefined && gameType === null) {
+            //if type is none but server is offline ignore since obviously no game server is running yet
+            if (extras.type === "none" && (serverPowerState === "offline" || serverPowerState === "stopped")) {
+                return embed;
+            }
+
             //add the type to the saved embed data
             let dataDir = "./ptero/data";
             if (!fs.existsSync(dataDir)){
