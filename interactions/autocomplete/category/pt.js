@@ -24,6 +24,7 @@ module.exports = {
 
             const filtered = servers
                 .filter(s => s.attributes.name.toLowerCase().includes(focused.value.toLowerCase()))
+                .slice(0, 25)
                 .map(s => ({
                     name: s.attributes.name,
                     value: s.attributes.identifier
@@ -42,6 +43,7 @@ module.exports = {
 
             const filtered = servers
                 .filter(s => s.attributes.name.toLowerCase().includes(focused.value.toLowerCase()))
+                .slice(0, 25)
                 .map(s => ({
                     name: s.attributes.name,
                     value: s.attributes.identifier
@@ -57,6 +59,7 @@ module.exports = {
 
             const filtered = nodes.data
                 .filter(n => n.attributes.name.toLowerCase().includes(focused.value.toLowerCase()))
+                .slice(0, 25)
                 .map(n => ({
                     name: n.attributes.name,
                     value: n.attributes.id.toString()
