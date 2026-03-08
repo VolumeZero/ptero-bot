@@ -81,6 +81,13 @@ module.exports = {
                         .setRequired(true)
                         .setAutocomplete(true)
                 )
+                .addBooleanOption(option =>
+                    option
+                        .setName("enable_server_list") //list of servers and their statuses on the node
+                        .setDescription("Enable list of servers hosted on the node with their statuses in the embed.")
+                        .setRequired(false)
+                )
+                    
         ),
 
     async execute(interaction) {
@@ -189,6 +196,7 @@ module.exports = {
         } else if (subcommand === "node-embed") {
 
             const nodeId = interaction.options.getString("node_name");
+            const enableServerList = interaction.options.getBoolean("enable_server_list") || false;
             if (!clientApiKey) {
     	        return interaction.reply({
     	        	content: "You have not set your API key yet. Please use `/pt key` to set it.",
@@ -211,7 +219,7 @@ module.exports = {
             }
 
             try {
-                await sendNodeStatusEmbed(interaction, nodeId); //will be bot owner only and use application api
+                await sendNodeStatusEmbed(interaction, nodeId, enableServerList);
             } catch (error) {
                 console.error("Error in node-embed command:", error);
                 return interaction.followUp({

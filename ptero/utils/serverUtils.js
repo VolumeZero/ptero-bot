@@ -13,6 +13,16 @@ function serverPowerEmoji(status) {
     }
 }
 
+function serverPowerEmojiOnly(status) {
+    switch (status) {
+        case "running": return "🟢"
+        case "offline": return "🔴"
+        case "starting": return "🟡"
+        case "stopping": return "🟠"
+        default: return "⚪"
+    }
+}
+
 function uptimeToString(uptimeMs) {
     const totalSeconds = Math.floor(uptimeMs / 1000);
     const days = Math.floor(totalSeconds / 86400);
@@ -130,6 +140,7 @@ async function isApplicationKeyValid() {
 
 module.exports = {
     serverPowerEmoji,
+    serverPowerEmojiOnly,
     uptimeToString,
     formatBytes,
     formatMegabytes,

@@ -1,6 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder } = require("discord.js");
 const { pterodactyl } = require("../../config.json");
-const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, embedColorFromWingsStatus, stripAnsi, isApplicationKeyValid } = require("./serverUtils");
+const { formatBytes, formatMegabytes, uptimeToString, serverPowerEmoji, embedColorFromStatus, embedColorFromWingsStatus, stripAnsi, isApplicationKeyValid, serverPowerEmojiOnly } = require("./serverUtils");
 const { getServerExtras } = require("./getServerExtras");
 const { PteroWings } = require("../requests/wingsApiReq");
 const { PteroClient } = require("../requests/clientApiReq");
@@ -8,7 +8,7 @@ const { PteroApp } = require("../requests/appApiReq");
 const fs = require("fs");
 
 module.exports = {
-    async createNodeStatusEmbed(nodeId) {
+    async createNodeStatusEmbed(nodeId, enableServerList) {
         const [nodeDetailsResponse, nodeConfigResponse] = await Promise.all([
             PteroApp.request(`nodes/${nodeId}`, 'get', {include: 'location,allocations,servers'}),
             PteroApp.request(`nodes/${nodeId}/configuration`)
@@ -108,6 +108,24 @@ module.exports = {
             .setDescription(`Last updated: <t:${Math.floor(Date.now() / 1000)}:R>\nNext update in <t:${Math.floor(Date.now() / 1000) + pterodactyl.NODE_STATUS_UPDATE_INTERVAL}:R>`)
             .setTimestamp()
             .setFooter({ text: `${pterodactyl.EMBED_FOOTER_TEXT}`, iconURL: `${pterodactyl.EMBED_FOOTER_ICON_URL}` });
+
+        if (enableServerList && servers.length > 0) {
+            servers.sort((a, b) => a.configuration.meta.name.localeCompare(b.configuration.meta.name));
+            let serverListText = servers.map(server => {
+                const emoji = serverPowerEmojiOnly(server.state);
+                let name = server.configuration.meta.name;
+                if (name.length > 32) {
+                    name = name.slice(0, 29) + '...';
+                }
+                return `${emoji} - ${name}`;
+            }).join('\n');
+            serverListText = `\`\`\`${serverListText}\`\`\`` || 'No servers found for this node.';
+            if (serverListText.length > 1024) {
+                serverListText = serverListText.slice(0, 1021) + '...';
+            }
+
+            embed.addFields({ name: "Servers", value: serverListText, inline: false });
+        }
 
         return embed;
     },

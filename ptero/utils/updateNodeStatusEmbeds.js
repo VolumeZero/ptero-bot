@@ -39,7 +39,7 @@ module.exports = {
                         return;
                     }
 
-                    const embed = await createNodeStatusEmbed(msgInfo.nodeId);
+                    const embed = await createNodeStatusEmbed(msgInfo.nodeId, msgInfo.enableServerList);
                     await message.edit({ embeds: [embed] });
 
                     await new Promise(res => setTimeout(res, 20));

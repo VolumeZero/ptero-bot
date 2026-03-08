@@ -4,7 +4,7 @@ const { createNodeStatusEmbed } = require("../utils/embeds");
 const { PteroApp } = require("../requests/appApiReq");
 
 module.exports = {
-    async sendNodeStatusEmbed(interaction, nodeId) {
+    async sendNodeStatusEmbed(interaction, nodeId, enableServerList) {
         //defer 
         await interaction.deferReply({ ephemeral: true });
 
@@ -59,7 +59,7 @@ module.exports = {
             }
         }
 
-        const embed = await createNodeStatusEmbed(nodeId);
+        const embed = await createNodeStatusEmbed(nodeId, enableServerList);
         //send to the current channel
         //save message ID and channel ID to file for future updates
         const sentMessage = await interaction.channel.send({ embeds: [embed] });
@@ -68,6 +68,7 @@ module.exports = {
             nodeId: nodeId,
             channelId: interaction.channel.id,
             messageId: sentMessage.id,
+            enableServerList: enableServerList
         });
         fs.writeFileSync("./ptero/data/nodeStatusMessages.json", JSON.stringify(statusMessages, null, 4));
         
